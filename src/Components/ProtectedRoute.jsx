@@ -3,15 +3,11 @@ import { Navigate, useLocation } from 'react-router-dom';
 
 const ProtectedRoute = ({ children }) => {
   const location = useLocation();
-  const isLoggedIn = localStorage.getItem('loggedInUserMobileNumber');
+  const isAdminLoggedIn = localStorage.getItem('adminLoggedIn'); // Check if the admin is logged in
 
-  if (!isLoggedIn) {
-    // If not logged in, redirect to login with the intended destination
-    return <Navigate 
-      to="/" 
-      state={{ from: location }} 
-      replace 
-    />;
+  if (!isAdminLoggedIn) {
+    // If not logged in as admin, redirect to the admin login page
+    return <Navigate to="/admin-login" state={{ from: location }} replace />;
   }
 
   return children;

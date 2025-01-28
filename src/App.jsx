@@ -41,59 +41,60 @@ function App() {
         <div className="flex">
           <div className="flex-1">
             <div className="flex flex-col min-h-screen">
-              <Routes>
-                {/* Public Routes */}
-                <Route path="/" element={<UserPanel />} />
-                <Route path="/admin-login" element={<AdminPanel />} />
+             <Routes>
+  {/* Public Routes */}
+  <Route path="/" element={<UserPanel />} />
+  <Route path="/admin-login" element={<AdminPanel />} />
 
-                {/* Protected User Dashboard Routes with Wildcard */}
-                <Route
-                  path="/dashboard/*"
-                  element={
-                    <ProtectedRoute>
-                      <Dashboard />
-                    </ProtectedRoute>
-                  }
-                >
-                  <Route path="create-ticket" element={<CreateTicket />} />
-                  <Route path="open" element={<Open />} />
-                  <Route path="close" element={<Close />} />
-                  <Route path="home" element={<Home />} />
-                  <Route path="profileform" element={<ProfileForm />} />
-                  <Route path="report" element={<Reports />} />
-                  <Route path="ppm-status" element={<PPMStatus />} />
-                  <Route path="monthly-healthcheck" element={<MonthlyHealthCheck />} />
-                  <Route path="spare-inventory" element={<InventoryInfo />} />
-                  <Route path="add-emails" element={<AddEmailsPage />} />
-                  <Route path="privacy-policy" element={<PrivacyPolicyPage />} />
-                  <Route path="terms-of-service" element={<TermsOfService />} />
-                  <Route path="security-policy" element={<SecurityPolicyPage />} />
-                </Route>
+  {/* Protected User Dashboard Routes */}
+  <Route
+    path="/dashboard/*"
+    element={
+      <ProtectedRoute isAdminRoute={false}>
+        <Dashboard />
+      </ProtectedRoute>
+    }
+  >
+    <Route path="create-ticket" element={<CreateTicket />} />
+    <Route path="open" element={<Open />} />
+    <Route path="close" element={<Close />} />
+    <Route path="home" element={<Home />} />
+    <Route path="profileform" element={<ProfileForm />} />
+    <Route path="report" element={<Reports />} />
+    <Route path="ppm-status" element={<PPMStatus />} />
+    <Route path="monthly-healthcheck" element={<MonthlyHealthCheck />} />
+    <Route path="spare-inventory" element={<InventoryInfo />} />
+    <Route path="add-emails" element={<AddEmailsPage />} />
+    <Route path="privacy-policy" element={<PrivacyPolicyPage />} />
+    <Route path="terms-of-service" element={<TermsOfService />} />
+    <Route path="security-policy" element={<SecurityPolicyPage />} />
+  </Route>
 
-                {/* Protected Admin Dashboard Routes */}
-                <Route
-                  path="/dashboardadmin/*"
-                  element={
-                    <ProtectedRoute>
-                      <Dashboardadmin />
-                    </ProtectedRoute>
-                  }
-                >
-                  <Route path="operator" element={<Operator />} />
-                  <Route path="openticketadmin" element={<OpenticketAdmin />} />
-                  <Route path="closeticketadmin" element={<CloseticketAdmin />} />
-                  <Route path="issue-category" element={<IssueCategoryDetails />} />
-                  <Route path="engineer" element={<Engineers />} />
-                  <Route path="company" element={<Company />} />
-                  <Route path="ppm" element={<PpmForm />} />
-                  <Route path="healthcheck" element={<HealthCheckForm />} />
-                  <Route path="periodicreport" element={<PeriodicReport />} />
-                  <Route path="promptmanager" element={<PromptManager />} />
-                </Route>
+  {/* Protected Admin Dashboard Routes */}
+  <Route
+    path="/dashboardadmin/*"
+    element={
+      <ProtectedRoute isAdminRoute={true}>
+        <Dashboardadmin />
+      </ProtectedRoute>
+    }
+  >
+    <Route path="operator" element={<Operator />} />
+    <Route path="openticketadmin" element={<OpenticketAdmin />} />
+    <Route path="closeticketadmin" element={<CloseticketAdmin />} />
+    <Route path="issue-category" element={<IssueCategoryDetails />} />
+    <Route path="engineer" element={<Engineers />} />
+    <Route path="company" element={<Company />} />
+    <Route path="ppm" element={<PpmForm />} />
+    <Route path="healthcheck" element={<HealthCheckForm />} />
+    <Route path="periodicreport" element={<PeriodicReport />} />
+    <Route path="promptmanager" element={<PromptManager />} />
+  </Route>
 
-                {/* Catch-all Route */}
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
+  {/* Catch-all Route */}
+  <Route path="*" element={<Navigate to="/" replace />} />
+</Routes>
+
             </div>
           </div>
         </div>

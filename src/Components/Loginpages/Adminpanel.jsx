@@ -23,6 +23,7 @@ const Adminpanel = () => {
   const handleAdminLogin = (event) => {
     event.preventDefault();
     if (email === 'admin@gmail.com' && enteredOtp === otp) {
+      localStorage.setItem('adminLoggedIn', true);  // Set the admin login status
       navigate('/dashboardadmin'); // Redirect to the admin dashboard
     } else {
       alert('Incorrect email or OTP');

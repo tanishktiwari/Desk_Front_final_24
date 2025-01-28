@@ -5,6 +5,6 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   preview: {
-    allowedHosts: ['deskassure-frontend.onrender.com'],
+    allowedHosts: ['deskassure-frontend.onrender.com', 'console.deskassure.com'],
   },
 })

@@ -1,0 +1,22 @@
+.ticket-list-container {
+  overflow: hidden; /* Hide overflowing items */
+  height: 100%; /* Set height for container */
+  position: relative; /* Position relative for absolute children */
+}
+
+.ticket-list {
+  position: absolute; /* For scrolling effect */
+  width: 100%; /* Full width */
+  animation: waterfall 30s linear infinite; /* Adjust duration as needed */
+  margin: 0; /* Remove default margin */
+  padding: 0; /* Remove default padding */
+}
+
+@keyframes waterfall {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-50%); /* Move by the height of the original list */
+  }
+}

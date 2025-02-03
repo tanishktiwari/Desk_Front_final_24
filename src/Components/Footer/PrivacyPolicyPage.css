@@ -1,0 +1,100 @@
+/* PrivacyPolicyPage.css */
+
+.privacy-list {
+  list-style-type: none; /* Remove default bullets */
+  padding-left: 0; /* Remove default padding */
+}
+
+.privacy-list li {
+  position: relative;
+  padding-left: 25px; /* Space for the bullet */
+  margin-top: 10px;
+}
+
+.privacy-list li::before {
+  content: "•"; /* Custom bullet (dot) */
+  font-weight: bold; /* Make the dot bold */
+  position: absolute;
+  left: 0; /* Position the bullet at the left edge */
+  top: 0;
+  font-size: 20px; /* Bullet size */
+  color: black; /* Bullet color (you can change this) */
+}
+
+/* General styling for Privacy Policy page */
+.privacy-policy-page {
+  font-family: 'Poppins', sans-serif;
+}
+
+.privacy-policy-page h1 {
+  font-size: 2.5rem;
+  font-weight: bold;
+  text-align: center;
+}
+
+.privacy-policy-page h2 {
+  font-size: 1.8rem;
+  margin-top: 2rem;
+  font-weight: bold;
+}
+
+.privacy-policy-page h3 {
+  font-size: 1.6rem;
+  font-weight: bold;
+  margin-top: 1.5rem;
+}
+
+.privacy-policy-page p {
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-top: 1rem;
+  color: #333;
+}
+
+.privacy-policy-page a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.privacy-policy-page a:hover {
+  text-decoration: underline;
+}
+
+/* Custom image styles for Privacy Policy page */
+.privacy-policy-page img {
+  width: 100%;
+  height: 50vh; /* Adjust image height */
+  object-fit: cover;
+  margin-top: 2rem;
+}
+
+/* Footer styling */
+footer {
+  text-align: center;
+  margin-top: 2rem;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+/* Responsive Design Adjustments */
+@media (max-width: 768px) {
+  .privacy-policy-page h1 {
+    font-size: 2rem;
+  }
+
+  .privacy-policy-page h2 {
+    font-size: 1.5rem;
+  }
+
+  .privacy-policy-page h3 {
+    font-size: 1.4rem;
+  }
+
+  .privacy-policy-page p {
+    font-size: 0.9rem;
+  }
+
+  .privacy-policy-page img {
+    height: 40vh; /* Adjust image height on smaller screens */
+  }
+}

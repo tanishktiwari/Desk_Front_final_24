@@ -1,0 +1,34 @@
+/* Adminpanel.css */
+@keyframes appear {
+  0% {
+    transform: translateZ(-50px) scale(0);
+    opacity: 0;
+  }
+  100% {
+    transform: translateZ(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.text-3d {
+  display: flex;
+  font-size: 2rem; /* Adjust as necessary */
+  font-weight: bold;
+  perspective: 1000px; /* 3D perspective */
+}
+
+.text-3d span {
+  display: inline-block;
+  animation: appear 0.5s ease forwards;
+  opacity: 0;
+  transform: translateZ(-50px); /* Start off in the back */
+}
+
+/* Delays for each letter to create a staggered effect */
+.text-3d span:nth-child(1) { animation-delay: 0.1s; }
+.text-3d span:nth-child(2) { animation-delay: 0.2s; }
+.text-3d span:nth-child(3) { animation-delay: 0.3s; }
+.text-3d span:nth-child(4) { animation-delay: 0.4s; }
+.text-3d span:nth-child(5) { animation-delay: 0.5s; }
+.text-3d span:nth-child(6) { animation-delay: 0.6s; }
+.text-3d span:nth-child(7) { animation-delay: 0.7s; }

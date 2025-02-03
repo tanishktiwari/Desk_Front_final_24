@@ -1,0 +1,52 @@
+/* input#consent-checkbox {
+    width: 50px;
+}
+.country-code {
+    height: 45px;
+    z-index: 1;
+    left: 3px;
+    position: relative;
+} */
+label.leading-loose {
+        font-weight: 800;
+        margin-left: 10px;
+}
+label.leading-loose.pb-2 {
+    top: 8px;
+    position: relative;
+    right: 65px;
+}
+.ticket-icon {
+    display: inline-flex;
+    align-items: center;
+    padding-top: 0;
+    margin-top: 0;
+    margin-left: 0.5rem; /* 2 units (0.5rem = 8px) */
+    font-size: 12px; /* Corresponds to text-xs */
+    background-image: url('../../../../public/ticket.png'); /* Your image URL */
+    background-size: 15px; /* Adjust as needed */
+    background-repeat: no-repeat; /* Prevent the image from repeating */
+    background-position: left center; /* Position the image */
+    padding-left: 25px; /* Space for the image */
+}
+.calendar-icon{
+    display: inline-flex;
+    align-items: center;
+    padding-top: 0;
+    margin-top: 10px;
+    margin-left: 0.5rem; /* 2 units (0.5rem = 8px) */
+    font-size: 12px; /* Corresponds to text-xs */
+    background-image: url('../../../../public/calendar.png'); /* Your image URL */
+    background-size: 15px; /* Adjust as needed */
+    background-repeat: no-repeat; /* Prevent the image from repeating */
+    background-position: left center; /* Position the image */
+    padding-left: 25px; /* Space for the image */
+}
+.bg-ticket-icon {
+  background-image: url('/add.png'); /* Use your desired image URL */
+  background-size: contain; /* Adjusts the image size */
+  background-repeat: no-repeat; /* Prevents the image from repeating */
+  width: 1.625rem; /* Set the width */
+  height: 1.625rem; /* Set the height */
+  margin-bottom: 0.5rem; /* Adds spacing between the icon and text */
+}

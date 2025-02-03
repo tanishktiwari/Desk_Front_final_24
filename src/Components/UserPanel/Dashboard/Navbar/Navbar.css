@@ -1,0 +1,102 @@
+.logo {
+  /* background-image: url("../../../../../public/logo_black_full.png"); */
+  background-size: contain; /* Ensures the image fits within the div */
+  background-repeat: no-repeat;
+  background-position: center;
+  height: 10rem; /* Adjust this height as needed */
+  width: 35%; /* Adjust width as needed */
+}
+.flex.flex-shrink-0.items-center {
+    width: 50%;
+}/* Ensure the navbar has a fixed position and proper z-index */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4rem; /* Adjust based on your navbar height */
+  z-index: 40;
+  background-color: #333; /* Example color */
+  /* Other styles */
+}
+.w-full {
+    width: 100%;
+}
+.navbar {
+  z-index: 55;
+}
+.notification-button {
+  padding: 0.5rem; /* Adjust padding as needed */
+  border-radius: 9999px; /* Full rounded button */
+  background-color: transparent; /* Default background */
+  transition: background-color 0.3s; /* Smooth transition for background */
+}
+
+.notification-button:hover {
+  background-color: rgba(34, 197, 94, 0.5); /* Light green background on hover */
+}
+
+.notification-button .icon {
+  height: 1.3rem; /* Set height */
+  width: 1.3rem; /* Set width */
+  filter: brightness(0) invert(1); /* Makes the icon white */
+  transition: filter 0.3s; /* Smooth transition for filter */
+}
+
+
+
+.settings-button {
+  padding: 0.5rem; /* Adjust padding as needed */
+  border-radius: 9999px; /* Full rounded button */
+  background-color: transparent; /* Default background */
+  transition: background-color 0.3s; /* Smooth transition for background */
+}
+
+
+
+.settings-button .settings {
+  height: 1.5rem; /* Set height */
+  width: 1.5rem; /* Set width */
+  filter: brightness(0) invert(1); /* Makes the icon white */
+  transition: filter 0.3s; /* Smooth transition for filter */
+}
+
+.settings-button:hover .settings {
+  filter: brightness(0) saturate(1000%) hue-rotate(90deg); /* Adjust for green color on hover */
+}
+/* General Tooltip Styles */
+/* Tooltip container */
+.custom-tooltip {
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0.8); /* Dark background */
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 14px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease-in-out;
+  z-index: 1000; /* Ensure it's above other elements */
+}
+
+/* Tooltip becomes visible */
+.custom-tooltip.visible {
+  visibility: visible;
+  opacity: 1;
+  margin-top: 10px;
+}
+
+/* Tooltip for Create Ticket Button */
+.create-ticket-button + .custom-tooltip {
+  top: 100%; /* Position directly below the button */
+  left: 85%;   /* Align to the left edge of the button */
+  margin-top: 5px; /* Add space between button and tooltip */
+}
+
+/* Tooltip for Notification Button */
+.notification-button + .custom-tooltip {
+  top: 100%; /* Position directly below the button */
+  left: 90%;   /* Align to the left edge of the button */
+  margin-top: 5px; /* Add space between button and tooltip */
+}

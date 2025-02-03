@@ -1,0 +1,30 @@
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500&display=swap');
+
+.sidebar {
+  z-index: 1000; /* Set to a high value */
+}
+
+.sidebar-items {
+  width: 100%; /* Ensure full width for proper alignment */
+}
+
+.dashboard-logo, .add-ticket-icon, .open-icon, .close-icon, .report-icon {
+  height: 1.625rem; /* Set height */
+  width: 1.625rem; /* Set width */
+  }
+
+li:hover .dashboard-logo,
+li:hover .add-ticket-icon,
+li:hover .open-icon,
+li:hover .close-icon,
+li:hover .report-icon {
+  filter: none; /* Reset filter on hover to show the original color */
+}
+
+/* Media query for mobile view */
+@media (max-width: 768px) {
+  .sidebar {
+    height: 100vh; /* Set height to cover the full viewport */
+    width: 100%; /* Optional: adjust width if needed */
+  }
+}

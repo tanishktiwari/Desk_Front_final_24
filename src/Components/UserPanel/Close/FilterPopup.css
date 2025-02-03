@@ -1,0 +1,108 @@
+/* Overlay that covers the entire screen */
+.filter-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Slight dark overlay */
+  display: flex;
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
+  z-index: 1000; /* Make sure it's on top */
+}
+
+/* Popup box that will hold the form */
+.filter-popup {
+  background-color: white;
+  /* padding: 20px; */
+  width: 100%;
+  max-width: 400px; /* Optional: Limit the max width of the popup */
+  /* border-radius: 10px; */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center content inside the popup */
+}
+
+/* Header container with the image and close button */
+.header-container {
+  background-color: black; /* Black background */
+  width: 100%; /* Full width */
+  padding: 0;
+  position: relative; /* For absolute positioning of the close button */
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  display: flex;
+  justify-content: center; /* Center image horizontally */
+  align-items: center; /* Center image vertically */
+}
+
+.header-image {
+  height: auto;
+  width: 50%; /* Adjust width of the image (you can set a fixed width as needed) */
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 30px;
+  position: absolute;
+  top: 5px; /* Position button slightly away from the top */
+  right: 10px; /* Position button slightly away from the right edge */
+}
+
+.close-btn:hover {
+  color: #ccc; /* Optional: Hover effect */
+}
+
+/* Filter header (centered text) */
+.filter-header {
+  margin-top: 15px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* Filter content section */
+.filter-content {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.filter-option {
+  margin-bottom: 15px;
+}
+
+.filter-option label {
+  margin-bottom: 5px;
+  display: block;
+}
+
+.filter-option select,
+.filter-option input {
+  width: 100%;
+  padding: 8px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+/* Footer section with Apply button */
+.filter-footer {
+  width: 100%;
+  text-align: center;
+}
+
+.apply-btn {
+  background-color: #28a745;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.apply-btn:hover {
+  background-color: #218838;
+}

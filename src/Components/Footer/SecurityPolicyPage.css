@@ -1,0 +1,22 @@
+/* SecurityPolicyPage.css */
+
+.security-list {
+  list-style-type: none; /* Remove default bullets */
+  padding-left: 0; /* Remove default padding */
+}
+
+.security-list li {
+  position: relative;
+  padding-left: 25px; /* Space for the bullet */
+  margin-top: 10px;
+}
+
+.security-list li::before {
+  content: "•"; /* Custom bullet (dot) */
+  font-weight: bold; /* Make the dot bold */
+  position: absolute;
+  left: 0; /* Position the bullet at the left edge */
+  top: 0;
+  font-size: 20px; /* Bullet size */
+  color: black; /* Bullet color (you can change this) */
+}

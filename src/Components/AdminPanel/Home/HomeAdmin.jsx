@@ -38,7 +38,7 @@ const HomeAdmin = () => {
   useEffect(() => {
     const fetchImages = async () => {
       try {
-        const response = await axios.get("http://localhost:5174/api/images");
+        const response = await axios.get( `${import.meta.env.VITE_API_URL}/api/images`);
         setImages(response.data);
       } catch (error) {
         console.error("Error fetching images:", error);
@@ -72,7 +72,7 @@ const HomeAdmin = () => {
     formData.append("image", file);
 
     try {
-      await axios.post("http://localhost:5174/api/upload", formData, {
+      await axios.post( `${import.meta.env.VITE_API_URL}/api/upload`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -80,7 +80,7 @@ const HomeAdmin = () => {
 
       // Fetch updated images after upload
       const updatedImagesResponse = await axios.get(
-        "http://localhost:5174/api/images"
+         `${import.meta.env.VITE_API_URL}/api/images`
       );
       setImages(updatedImagesResponse.data);
       setSelectedImage(null);
@@ -100,7 +100,7 @@ const HomeAdmin = () => {
     if (selectedImageToDelete) {
       try {
         await axios.delete(
-          `http://localhost:5174/api/images/${selectedImageToDelete._id}`
+          `${import.meta.env.VITE_API_URL}/api/images/${selectedImageToDelete._id}`
         );
 
         // Remove the deleted image from the state

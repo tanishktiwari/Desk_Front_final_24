@@ -166,7 +166,7 @@ const Home = () => {
           fetchChartData(mobileNumber);
 
           const imagesResponse = await axios.get(
-            "http://localhost:5174/api/images"
+             `${import.meta.env.VITE_API_URL}/api/images`
           );
           setImages(imagesResponse.data);
 

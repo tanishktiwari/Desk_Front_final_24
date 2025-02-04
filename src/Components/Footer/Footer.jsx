@@ -38,7 +38,7 @@ const Footer = () => {
 
             {/* Description - Added larger max-width */}
             <p className="text-center lg:text-left lg:max-w-3xl">
-              The first free end-to-end analytics service for the site, designed
+              The end-to-end analytics service for the site, designed
               to work with enterprises of various levels and business segments.
             </p>
 

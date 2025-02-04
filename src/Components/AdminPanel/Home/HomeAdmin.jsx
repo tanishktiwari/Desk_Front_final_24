@@ -149,7 +149,7 @@ const HomeAdmin = () => {
     labels: [
       "CCTV",
       "Access Control",
-      "Fire Alarm System",
+      "Fire Alarm",
       "PA System",
       "Other",
     ],
@@ -206,13 +206,13 @@ const HomeAdmin = () => {
       textColor: "text-blue-600",
     },
     {
-      title: "Open Tickets",
+      title: " Currently Open Tickets",
       value: "42",
       bgColor: "bg-green-100",
       textColor: "text-green-600",
     },
     {
-      title: "Closed Tickets",
+      title: "Total Tickets Raised (Monthly)",
       value: "156",
       bgColor: "bg-purple-100",
       textColor: "text-purple-600",
@@ -271,12 +271,12 @@ const HomeAdmin = () => {
             >
               <div className="flex flex-col items-center justify-center">
                 <h3
-                  className={`${metric.textColor} font-poppins text-base sm:text-lg font-semibold mb-1 sm:mb-2`}
+                  className={` font-poppins text-base sm:text-lg  mb-1 sm:mb-2`}
                 >
                   {metric.title}
                 </h3>
                 <p
-                  className={`${metric.textColor} font-poppins text-xl sm:text-2xl font-bold`}
+                  className={` font-poppins text-xl sm:text-4xl `}
                 >
                   {metric.value}
                 </p>
@@ -290,25 +290,11 @@ const HomeAdmin = () => {
           {/* Image Section */}
           <div className="relative flex-1 w-full xs:h-[250px] md:h-[550px] ">
             {/* Upload Icon - Moved inside the images container */}
-            <div className="absolute top-2 left-1/2 transform -translate-x-1/2 flex gap-4 z-10">
+            <div className="absolute top-2 left-1/2 transform -translate-x-1/2 flex gap-0 z-10">
               {/* Upload Button */}
-              <div className="text-gray-600 cursor-pointer bg-buttoncolor p-2 rounded-lg">
+              <div className="text-gray-600 cursor-pointer  p-2 rounded-lg justify-center">
                 <label htmlFor="image-upload">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="30"
-                    height="30"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M12 4v16m8-8l-8 8-8-8"
-                    />
-                  </svg>
+                  <img src="/edit.png" alt="" srcset="" className="w-5" />
                 </label>
                 <input
                   type="file"
@@ -322,9 +308,9 @@ const HomeAdmin = () => {
               {/* Delete Button */}
               <button
                 onClick={handleDeleteClick}
-                className="text-gray-600 bg-buttoncolor p-2 rounded-lg hover:bg-red-100"
+                className="text-white  p-2 rounded-lg hover:bg-red-100"
               >
-                <Trash2 size={30} />
+                <Trash2 size={20} />
               </button>
             </div>
 
@@ -402,7 +388,7 @@ const HomeAdmin = () => {
 
           {/* Category Distribution */}
           <div className="bg-white p-2 sm:p-4 rounded-lg border-2 border-gray-200">
-            <div className="flex justify-end mb-2 sm:mb-4 ">
+            <div className="flex justify-center mb-2 sm:mb-4 mt-7 lg:ml-6 ">
               <button className="w-full sm:w-40 lg:w-40 bg-custom-gradient text-white font-poppins font-light py-2 lg:py-3 rounded-xl shadow-md text-xs sm:text-sm">
                 Category Distribution
               </button>
@@ -430,7 +416,7 @@ const HomeAdmin = () => {
               </div>
 
               {/* Legend */}
-              <div className="w-full sm:w-1/3 pl-0 sm:pl-4 pt-4 sm:pt-14">
+              <div className="w-full sm:w-1/3 pl-0 sm:pl-4 pt-4 sm:pt-28">
                 <div className="space-y-2 sm:space-y-4 text-left font-poppins">
                   {pieChartData.labels.map((label, index) => (
                     <div key={index} className="flex items-center space-x-2">

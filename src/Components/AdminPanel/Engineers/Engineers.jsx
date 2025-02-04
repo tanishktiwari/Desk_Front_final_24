@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { FaEdit, FaTrash } from "react-icons/fa";
-import "../Engineers/Engineers.css";
+import { FaEdit, FaTrash, FaEnvelope, FaPhone } from "react-icons/fa";
 
 const Engineers = () => {
+  // ... Keep all existing state and functions the same ...
   const [showPopup, setShowPopup] = useState(false);
   const [engineerData, setEngineerData] = useState({
     name: "",
@@ -16,7 +16,6 @@ const Engineers = () => {
   const [editingEngineerId, setEditingEngineerId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-
   const [errors, setErrors] = useState({
     name: "",
     title: "",
@@ -25,10 +24,10 @@ const Engineers = () => {
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [searchVisible, setSearchVisible] = useState(false);
-  
-  // New variable to store company count from localStorage
   const companyCount = localStorage.getItem("totalCompanyCount") || "0";
 
+  // Keep all existing functions (fetchEngineers, handleSubmit, etc.)
+  // ... 
   const fetchEngineers = async () => {
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/engineers`);
@@ -209,42 +208,42 @@ const Engineers = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-4 ml-[12%] mt-14">
+    <div className="max-w-7xl mx-auto p-2 md:p-4 md:ml-[12%] mt-4 md:mt-20 2xl:pl-[10%] 2xl:pt-20 lg:pl-[15%] lg:pt-20 sm:mt-20 xs:mt-20">
       {/* Statistics section */}
-      <div className="flex justify-between items-center bg-white p-6 shadow-md rounded-md mb-6">
-        <div className="flex items-center">
-          <img src="/Group_10.png" alt="Operator Icon" className="mr-4 h-16 w-16" />
-          <div className="flex flex-col items-start">
-            <div className="text-4xl font-semibold text-green-600">{totalEntries}</div>
-            <div className="text-gray-500">Total Engineer</div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white p-3 md:p-6 shadow-md rounded-md mb-4 md:mb-6">
+        <div className="flex items-center justify-center md:justify-start p-4 bg-gray-50 rounded-lg">
+          <img src="/Group_10.png" alt="Operator Icon" className="mr-2 md:mr-4 h-12 w-12 md:h-16 md:w-16" />
+          <div className="flex flex-col">
+            <div className="text-2xl md:text-4xl font-semibold text-green-600">{totalEntries}</div>
+            <div className="text-sm md:text-base text-gray-500">Total Engineer</div>
           </div>
         </div>
 
-        <div className="flex items-center">
-          <img src="/Group_11.png" alt="Company Icon" className="mr-4 h-16 w-16" />
-          <div className="flex flex-col items-start">
-            <div className="text-4xl font-semibold text-gray-800">{companyCount}</div>
-            <div className="text-gray-500">Companies</div>
-            <div className="text-sm text-red-500">↓ 1% this month</div>
+        <div className="flex items-center justify-center md:justify-start p-4 bg-gray-50 rounded-lg">
+          <img src="/Group_11.png" alt="Company Icon" className="mr-2 md:mr-4 h-12 w-12 md:h-16 md:w-16" />
+          <div className="flex flex-col">
+            <div className="text-2xl md:text-4xl font-semibold text-gray-800">{companyCount}</div>
+            <div className="text-sm md:text-base text-gray-500">Companies</div>
+            <div className="text-xs md:text-sm text-red-500">↓ 1% this month</div>
           </div>
         </div>
 
-        <div className="flex items-center">
-          <img src="/Group_12.png" alt="Ticket Icon" className="mr-4 h-16 w-16" />
-          <div className="flex flex-col items-start">
-            <div className="text-4xl font-semibold text-green-600">189</div>
-            <div className="text-gray-500">Active Tickets</div>
+        <div className="flex items-center justify-center md:justify-start p-4 bg-gray-50 rounded-lg">
+          <img src="/Group_12.png" alt="Ticket Icon" className="mr-2 md:mr-4 h-12 w-12 md:h-16 md:w-16" />
+          <div className="flex flex-col">
+            <div className="text-2xl md:text-4xl font-semibold text-green-600">189</div>
+            <div className="text-sm md:text-base text-gray-500">Active Tickets</div>
           </div>
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white p-6 shadow-md rounded-md">
+      {/* Main content section */}
+      <div className="bg-white p-3 md:p-6 shadow-md rounded-md">
         {/* Header and Search */}
-        <div className="bg-white p-6 shadow-md rounded-md mb-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-semibold">Engineer Details</h2>
-            <div className="flex items-center gap-4">
+        <div className="bg-white p-3 md:p-6 shadow-md rounded-md mb-4 md:mb-6">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <h2 className="text-xl md:text-2xl font-semibold">Engineer Details</h2>
+            <div className="flex flex-wrap items-center gap-2 md:gap-4">
               <button onClick={() => setSearchVisible(!searchVisible)} className="relative">
                 <img src='/search.png' alt="Search" className="w-6 h-6" />
               </button>
@@ -254,164 +253,121 @@ const Engineers = () => {
                   placeholder="Search..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="border rounded-md py-2 px-4"
+                  className="border rounded-md py-1 md:py-2 px-2 md:px-4 w-full md:w-auto"
                 />
               )}
               <button
-                className="bg-blue-500 text-white px-4 py-2 rounded-md"
+                className="bg-blue-500 text-white px-3 md:px-4 py-1 md:py-2 rounded-md text-sm md:text-base w-full md:w-auto"
                 onClick={handleAddClick}
               >
                 ADD Engineer
               </button>
             </div>
           </div>
-
-          {showPopup && (
-            <div className="popup-overlay-engineers">
-              <div className="popup-container-engineers">
-                <div className="popup-header-engineers">
-                  <h3>{editingEngineerId ? "Edit Engineer" : "Create Engineer"}</h3>
-                </div>
-                <div className="popup-body-engineers">
-                  <div className="title-name">
-                    <label htmlFor="title">
-                      Title<span className="required-star">*</span>
-                    </label>
-                    <input
-                      id="title"
-                      name="title"
-                      type="text"
-                      placeholder="Enter title"
-                      value={engineerData.title}
-                      onChange={handleInputChange}
-                    />
-                    {errors.title && (
-                      <p className="error-message">{errors.title}</p>
-                    )}
-
-                    <label htmlFor="name">
-                      Engineer Name<span className="required-star">*</span>
-                    </label>
-                    <input
-                      id="name"
-                      name="name"
-                      type="text"
-                      placeholder="Enter engineer name"
-                      value={engineerData.name}
-                      onChange={handleInputChange}
-                    />
-                    {errors.name && <p className="error-message">{errors.name}</p>}
-                  </div>
-                  <div className="title-name">
-                    <label htmlFor="email">
-                      Email<span className="required-star">*</span>
-                    </label>
-                    <input
-                      id="email"
-                      name="email"
-                      type="email"
-                      placeholder="Enter email"
-                      value={engineerData.email}
-                      onChange={handleInputChange}
-                    />
-                    {errors.email && (
-                      <p className="error-message">{errors.email}</p>
-                    )}
-
-                    <label htmlFor="mobile">
-                      Mobile<span className="required-star">*</span>
-                    </label>
-                    <input
-                      id="mobile"
-                      name="mobile"
-                      type="text"
-                      placeholder="Enter mobile number"
-                      value={engineerData.mobile}
-                      onChange={handleInputChange}
-                    />
-                    {errors.mobile && (
-                      <p className="error-message">{errors.mobile}</p>
-                    )}
-                  </div>
-                  <div className="title-name">
-                    <label htmlFor="contractType">Contract Type</label>
-                    <input
-                      id="contractType"
-                      name="contractType"
-                      type="text"
-                      placeholder="Enter contract type"
-                      value={engineerData.contractType}
-                      onChange={handleInputChange}
-                    />
-
-                    <label htmlFor="managerName">Manager Name</label>
-                    <input
-                      id="managerName"
-                      name="managerName"
-                      type="text"
-                      placeholder="Enter manager name"
-                      value={engineerData.managerName}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                </div>
-                <div className="popup-footer-engineers">
-                  <button className="cancel-button" onClick={handleClosePopup}>
-                    Cancel
-                  </button>
-                  <button className="submit-button" onClick={handleSubmit}>
-                    {editingEngineerId ? "Update" : "Submit"}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
-        <table className="w-full border-collapse">
-          <thead>
-            <tr>
-              <th className="border-b-2 p-4 text-left">Engineer Name</th>
-              <th className="border-b-2 p-4 text-left">Email</th>
-              <th className="border-b-2 p-4 text-left">Mobile</th>
-              <th className="border-b-2 p-4 text-left">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedEngineers.map((engineer) => (
-              <tr key={engineer._id}>
-                <td className="border-b p-4">{engineer.name}</td>
-                <td className="border-b p-4">{engineer.email}</td>
-                <td className="border-b p-4">{engineer.mobile}</td>
-                <td className="border-b p-4">
+        {/* Desktop Table (hidden on mobile) */}
+        <div className="hidden md:block overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr>
+                <th className="border-b-2 p-2 md:p-4 text-left">Engineer Name</th>
+                <th className="border-b-2 p-2 md:p-4 text-left">Email</th>
+                <th className="border-b-2 p-2 md:p-4 text-left">Mobile</th>
+                <th className="border-b-2 p-2 md:p-4 text-left">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedEngineers.map((engineer) => (
+                <tr key={engineer._id}>
+                  <td className="border-b p-2 md:p-4">{engineer.name}</td>
+                  <td className="border-b p-2 md:p-4">{engineer.email}</td>
+                  <td className="border-b p-2 md:p-4">{engineer.mobile}</td>
+                  <td className="border-b p-2 md:p-4">
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleEditClick(engineer)}
+                        className="text-blue-500 hover:text-blue-700"
+                      >
+                        <FaEdit />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteClick(engineer._id)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Mobile Cards (hidden on desktop) */}
+        <div className="md:hidden grid grid-cols-1 gap-4">
+          {paginatedEngineers.map((engineer) => (
+            <div key={engineer._id} className="bg-gray-50 p-4 rounded-lg shadow">
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <h3 className="font-semibold text-lg">{engineer.name}</h3>
+                  {engineer.title && (
+                    <p className="text-gray-600 text-sm">{engineer.title}</p>
+                  )}
+                </div>
+                <div className="flex gap-2">
                   <button
                     onClick={() => handleEditClick(engineer)}
-                    className="mr-2 text-blue-500 hover:text-blue-700"
+                    className="text-blue-500 hover:text-blue-700 p-2"
                   >
-                    <FaEdit />
+                    <FaEdit size={18} />
                   </button>
                   <button
                     onClick={() => handleDeleteClick(engineer._id)}
-                    className="text-red-500 hover:text-red-700"
+                    className="text-red-500 hover:text-red-700 p-2"
                   >
-                    <FaTrash />
+                    <FaTrash size={18} />
                   </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-gray-600">
+                  <FaEnvelope className="text-gray-400" />
+                  <span className="text-sm">{engineer.email}</span>
+                </div>
+                <div className="flex items-center gap-2 text-gray-600">
+                  <FaPhone className="text-gray-400" />
+                  <span className="text-sm">{engineer.mobile}</span>
+                </div>
+                {engineer.contractType && (
+                  <div className="text-sm text-gray-600">
+                    <span className="font-medium">Contract: </span>
+                    {engineer.contractType}
+                  </div>
+                )}
+                {engineer.managerName && (
+                  <div className="text-sm text-gray-600">
+                    <span className="font-medium">Manager: </span>
+                    {engineer.managerName}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Pagination */}
-      <div className="flex justify-between items-center mt-6">
-        <div>
+      {/* Responsive pagination */}
+      <div className="flex flex-col md:flex-row justify-between items-center mt-4 md:mt-6 gap-2 text-sm md:text-base">
+        <div className="text-center md:text-left">
           Showing data {startIndex} to {endIndex} of {totalEntries} entries
         </div>
 
         <div className="flex items-center space-x-2">
           <button
-            className="px-4 py-2 border rounded-md"
+            className="px-3 md:px-4 py-1 md:py-2 border rounded-md"
             onClick={() => setCurrentPage(currentPage - 1)}
             disabled={currentPage === 1}
           >
@@ -419,14 +375,14 @@ const Engineers = () => {
           </button>
 
           <button
-            className="px-4 py-2 text-white rounded-md"
+            className="px-3 md:px-4 py-1 md:py-2 text-white rounded-md"
             style={{ backgroundColor: '#5932EA' }}
           >
             {currentPage}
           </button>
 
           <button
-            className="px-4 py-2 border rounded-md"
+            className="px-3 md:px-4 py-1 md:py-2 border rounded-md"
             onClick={() => setCurrentPage(currentPage + 1)}
             disabled={currentPage === totalPages}
           >
@@ -434,6 +390,135 @@ const Engineers = () => {
           </button>
         </div>
       </div>
+
+      {/* Keep the existing popup component */}
+      {/* ... */}
+	   {showPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="p-4 border-b">
+              <h3 className="text-lg font-semibold">
+                {editingEngineerId ? "Edit Engineer" : "Create Engineer"}
+              </h3>
+            </div>
+            
+            <div className="p-4 space-y-4">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Title<span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    name="title"
+                    type="text"
+                    placeholder="Enter title"
+                    value={engineerData.title}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border rounded"
+                  />
+                  {errors.title && (
+                    <p className="text-red-500 text-sm mt-1">{errors.title}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Engineer Name<span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    name="name"
+                    type="text"
+                    placeholder="Enter engineer name"
+                    value={engineerData.name}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border rounded"
+                  />
+                  {errors.name && (
+                    <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Email<span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    name="email"
+                    type="email"
+                    placeholder="Enter email"
+                    value={engineerData.email}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border rounded"
+                  />
+                  {errors.email && (
+                    <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Mobile<span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    name="mobile"
+                    type="text"
+                    placeholder="Enter mobile number"
+                    value={engineerData.mobile}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border rounded"
+                  />
+                  {errors.mobile && (
+                    <p className="text-red-500 text-sm mt-1">{errors.mobile}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Contract Type
+                  </label>
+                  <input
+                    name="contractType"
+                    type="text"
+                    placeholder="Enter contract type"
+                    value={engineerData.contractType}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border rounded"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Manager Name
+                  </label>
+                  <input
+                    name="managerName"
+                    type="text"
+                    placeholder="Enter manager name"
+                    value={engineerData.managerName}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border rounded"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border-t flex justify-end gap-2">
+              <button
+                className="px-4 py-2 border rounded-md text-gray-600"
+                onClick={handleClosePopup}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 bg-blue-500 text-white rounded-md"
+                onClick={handleSubmit}
+              >
+                {editingEngineerId ? "Update" : "Submit"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

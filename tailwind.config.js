@@ -7,11 +7,11 @@ export default {
   theme: {
     extend: {
       screens: {
-        'xs': '320px',  // Custom breakpoint for 320px
-        'sm': '375px',  // Custom breakpoint for 375px
-        'md': '768px',  // Custom breakpoint for 425px
-        '2xl': '1440px',  // Custom breakpoint for 1024px
-        'xl': '2560px'
+        'xs': '320px',
+        'sm': '375px',
+        'md': '768px',
+        '2xl': '1440px',
+        'xl': '2560px',
       },
       colors: {
         'custom-blue': '#0a3e53', // Existing custom color

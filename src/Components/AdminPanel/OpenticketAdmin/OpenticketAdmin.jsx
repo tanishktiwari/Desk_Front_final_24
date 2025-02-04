@@ -424,7 +424,7 @@ const OpenticketAdmin = () => {
               </p>
             ) : (
               <>
-                <table className="min-w-full text-left text-sm font-light text-surface dark:text-white">
+                <table className="min-w-full text-left text-sm font-light text-surface dark:text-white ">
                   <thead className="border-b border-neutral-200 bg-white font-medium dark:border-white/10 dark:bg-body-dark">
                     <tr>
                       <th scope="col" className="px-2 py-2 font-poppins">

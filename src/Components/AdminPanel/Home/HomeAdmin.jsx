@@ -271,7 +271,7 @@ const HomeAdmin = () => {
             >
               <div className="flex flex-col items-center justify-center">
                 <h3
-                  className={` font-poppins text-base sm:text-lg  mb-1 sm:mb-2`}
+                  className={`font-poppins text-base sm:text-lg  mb-1 sm:mb-2`}
                 >
                   {metric.title}
                 </h3>

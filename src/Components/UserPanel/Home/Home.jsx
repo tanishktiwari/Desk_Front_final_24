@@ -238,12 +238,12 @@ const metricsData = [
             >
               <div className="flex flex-col items-center justify-center">
                 <h3
-                  className={`${metric.textColor} font-poppins text-base sm:text-lg font-semibold mb-1 sm:mb-2`}
+                  className={`font-poppins text-base sm:text-lg  mb-1 sm:mb-2`}
                 >
                   {metric.title}
                 </h3>
                 <p
-                  className={`${metric.textColor} font-poppins text-xl sm:text-2xl font-bold`}
+                  className={`font-poppins text-xl sm:text-4xl`}
                 >
                   {metric.value}
                 </p>
@@ -314,7 +314,7 @@ const metricsData = [
               </div>
 
               {/* Legend */}
-              <div className="w-full sm:w-1/3 pl-0 sm:pl-4 pt-4 sm:pt-14">
+              <div className="w-full sm:w-1/3 pl-0 sm:pl-4 pt-4 sm:pt-28">
                 <div className="space-y-2 sm:space-y-4 text-left font-poppins">
                   {pieChartData.labels.map((label, index) => (
                     <div key={index} className="flex items-center space-x-2">

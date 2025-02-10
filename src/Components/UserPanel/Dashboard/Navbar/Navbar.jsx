@@ -302,7 +302,7 @@ const Navbar = () => {
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <div className="logo w-24 h-8 sm:w-32 sm:h-10 font-poppins">
-                <img src="/logo_black_full.png" alt="deskAssure" srcset="" className="max-w-[300%] h-auto" />
+                <img src="/logo_black_full.png" alt="deskAssure" srcset="" className="max-w-[250%] h-auto" />
                 </div>
             </div>
             

@@ -2,8 +2,7 @@ import React, { useState, useEffect } from "react";
 import { FaEdit, FaTrash, FaEnvelope, FaPhone, FaBuilding, FaBriefcase } from "react-icons/fa";
 
 const Operator = () => {
-  // ... Keep all existing state and functions the same ...
-    const [showPopup, setShowPopup] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
   const [operatorName, setOperatorName] = useState("");
   const [email, setEmail] = useState("");
   const [mobile, setMobile] = useState("");
@@ -16,11 +15,11 @@ const Operator = () => {
   const [editingOperatorId, setEditingOperatorId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
-  const [searchVisible, setSearchVisible] = useState(false); // Added this line
+  const [searchField, setSearchField] = useState("all");
+  const [searchVisible, setSearchVisible] = useState(false);
   const itemsPerPage = 10;
   const companyCount = localStorage.getItem("totalCompanyCount") || "0";
 
-  // Fetch all operators and companies on component mount
   useEffect(() => {
     const fetchOperators = async () => {
       try {
@@ -60,7 +59,7 @@ const Operator = () => {
     setMobile("");
     setContractType("");
     setManagerName("");
-    setCompanyName(""); // Reset companyName for new entry
+    setCompanyName("");
     setTitle("");
   };
 
@@ -72,7 +71,7 @@ const Operator = () => {
     setMobile("");
     setContractType("");
     setManagerName("");
-    setCompanyName(""); // Reset companyName
+    setCompanyName("");
     setTitle("");
   };
 
@@ -110,7 +109,8 @@ const Operator = () => {
     setCurrentPage(1);
   };
 
-  const handleClearSearch = () => {
+  const handleSearchFieldChange = (field) => {
+    setSearchField(field);
     setSearchTerm("");
     setCurrentPage(1);
   };
@@ -157,25 +157,16 @@ const Operator = () => {
         );
       } else {
         setOperators([...operators, result]);
-
-        // Send email to the new operator
         await sendNewUserEmail(email, operatorName);
       }
 
       setShowPopup(false);
-      setOperatorName("");
-      setEmail("");
-      setMobile("");
-      setContractType("");
-      setManagerName("");
-      setCompanyName("");
-      setTitle("");
+      handleClosePopup();
     } catch (error) {
       console.error("Error adding or updating operator:", error);
     }
   };
 
-  // Function to send the new user email
   const sendNewUserEmail = async (recipientEmail, firstName) => {
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/send-new-user-mail`, {
@@ -208,7 +199,7 @@ const Operator = () => {
     setMobile(operator.mobile);
     setContractType(operator.contractType);
     setManagerName(operator.managerName);
-    setCompanyName(operator.companyName); // Set the companyName
+    setCompanyName(operator.companyName);
     setTitle(operator.title);
     setShowPopup(true);
   };
@@ -231,38 +222,42 @@ const Operator = () => {
     }
   };
 
-  // Search functionality across multiple fields
   const filteredOperators = operators.filter((operator) => {
+    if (!searchTerm) return true;
+    
     const search = searchTerm.toLowerCase();
-    return (
-      operator.title.toLowerCase().includes(search) ||
-      operator.operatorName.toLowerCase().includes(search) ||
-      operator.email.toLowerCase().includes(search) ||
-      operator.companyName.toLowerCase().includes(search) ||
-      operator.mobile.toLowerCase().includes(search) ||
-      operator.contractType.toLowerCase().includes(search) ||
-      operator.managerName.toLowerCase().includes(search)
-    );
+    switch (searchField) {
+      case "operatorName":
+        return operator.operatorName.toLowerCase().includes(search);
+      case "email":
+        return operator.email.toLowerCase().includes(search);
+      case "companyName":
+        return operator.companyName.toLowerCase().includes(search);
+      case "mobile":
+        return operator.mobile.toLowerCase().includes(search);
+      default:
+        return (
+          operator.operatorName.toLowerCase().includes(search) ||
+          operator.email.toLowerCase().includes(search) ||
+          operator.companyName.toLowerCase().includes(search) ||
+          operator.mobile.toLowerCase().includes(search)
+        );
+    }
   });
 
-  // Pagination logic
+  const totalEntries = filteredOperators.length;
+  const startIndex = (currentPage - 1) * itemsPerPage + 1;
+  const endIndex = Math.min(currentPage * itemsPerPage, totalEntries);
   const paginatedOperators = filteredOperators.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-
-  const totalEntries = filteredOperators.length; // Move this here
-  const startIndex = (currentPage - 1) * itemsPerPage + 1;
-  const endIndex = Math.min(currentPage * itemsPerPage, totalEntries);
-  // const paginatedOperators = filteredOperators.slice(
-  //   (currentPage - 1) * itemsPerPage,
-  //   currentPage * itemsPerPage
-  // );
   const totalPages = Math.ceil(totalEntries / itemsPerPage);
+
   return (
-    <div className="max-w-7xl mx-auto p-2 md:p-4 md:ml-[12%] mt-4 md:mt-20 2xl:pl-[10%] 2xl:pt-20 lg:pl-[15%] lg:pt-20 sm:mt-20 xs:mt-20">
+    <div className="flex flex-col mt-20 ml-32 h-full w-[88%] xl:pl-[10%] 2xl:pl-[10%] lg:pl-[15%] font-poppins">
       {/* Statistics section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white p-3 md:p-6 shadow-md rounded-md mb-4 md:mb-6">
+      <div className="flex justify-between items-center bg-white p-6 shadow-md rounded-md mb-6">
         <div className="flex items-center justify-center md:justify-start p-4 bg-gray-50 rounded-lg">
           <img src="/Group_10.png" alt="Operator Icon" className="mr-2 md:mr-4 h-12 w-12 md:h-16 md:w-16" />
           <div className="flex flex-col">
@@ -290,7 +285,7 @@ const Operator = () => {
       </div>
 
       {/* Main content section */}
-      <div className="bg-white p-3 md:p-6 shadow-md rounded-md">
+      <div className="bg-white p-6 shadow-md rounded-md">
         {/* Header and Search */}
         <div className="bg-white p-3 md:p-6 shadow-md rounded-md mb-4 md:mb-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
@@ -300,16 +295,29 @@ const Operator = () => {
                 <img src="/search.png" alt="Search" className="w-6 h-6" />
               </button>
               {searchVisible && (
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="border rounded-md py-1 md:py-2 px-2 md:px-4 w-full md:w-auto"
-                />
+                <div className="flex gap-2">
+                  <select
+                    value={searchField}
+                    onChange={(e) => handleSearchFieldChange(e.target.value)}
+                    className="border rounded-md py-1 md:py-2 px-2 md:px-4"
+                  >
+                    <option value="all">All Fields</option>
+                    <option value="operatorName">Operator Name</option>
+                    <option value="email">Email</option>
+                    <option value="companyName">Company Name</option>
+                    <option value="mobile">Mobile</option>
+                  </select>
+                  <input
+                    type="text"
+                    placeholder={`Search by ${searchField === 'all' ? 'all fields' : searchField}...`}
+                    value={searchTerm}
+                    onChange={handleSearchChange}
+                    className="border rounded-md py-1 md:py-2 px-2 md:px-4 w-full md:w-auto"
+                  />
+                </div>
               )}
               <button
-                className="bg-blue-500 text-white px-3 md:px-4 py-1 md:py-2 rounded-md text-sm md:text-base w-full md:w-auto"
+                className="bg-buttoncolor text-white px-3 md:px-4 py-1 md:py-2 rounded-md text-sm md:text-base w-full md:w-auto"
                 onClick={handleAddClick}
               >
                 ADD TICKET OWNER
@@ -318,7 +326,7 @@ const Operator = () => {
           </div>
         </div>
 
-        {/* Desktop Table (hidden on mobile) */}
+        {/* Desktop Table */}
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full border-collapse">
             <thead>
@@ -359,7 +367,6 @@ const Operator = () => {
           </table>
         </div>
 
-        {/* Mobile Cards (hidden on desktop) */}
         <div className="md:hidden grid grid-cols-1 gap-4">
           {paginatedOperators.map((operator) => (
             <div key={operator._id} className="bg-gray-50 p-4 rounded-lg shadow">
@@ -420,7 +427,7 @@ const Operator = () => {
       </div>
 
       {/* Responsive pagination */}
-      <div className="flex flex-col md:flex-row justify-between items-center mt-4 md:mt-6 gap-2 text-sm md:text-base">
+      <div className="flex justify-between items-center mt-6">
         <div className="text-center md:text-left">
           Showing data {startIndex} to {endIndex} of {totalEntries} entries
         </div>

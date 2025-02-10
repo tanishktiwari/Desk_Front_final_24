@@ -30,121 +30,145 @@ const OpenticketAdmin = () => {
   // Change the state variable name from filteredTickets to displayedTickets
   const [displayedTickets, setDisplayedTickets] = useState([]);
   // Fetch tickets from the API when the component mounts
-  useEffect(() => {
-    const fetchTickets = async () => {
-      try {
-        // Fetch tickets from the API
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/tickets/open`
-        );
+useEffect(() => {
+  const fetchTickets = async () => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/tickets/open`
+      );
 
-        // Sort tickets by date and time in descending order (most recent first)
-        const sortedTickets = response.data.sort((a, b) => {
-          // Combine date and time into a Date object for comparison
-          const aDateTime =
-            new Date(`${a.date.split("T")[0]}T${a.time}`).getTime() || 0;
-          const bDateTime =
-            new Date(`${b.date.split("T")[0]}T${b.time}`).getTime() || 0;
+      const sortedTickets = response.data.sort((a, b) => {
+        const aDateTime = new Date(`${a.date.split("T")[0]}T${a.time}`).getTime() || 0;
+        const bDateTime = new Date(`${b.date.split("T")[0]}T${b.time}`).getTime() || 0;
+        return bDateTime - aDateTime;
+      });
 
-          // Sort by newest first
-          return bDateTime - aDateTime;
-        });
-
-        // Store sorted tickets in both states
-        setTickets(sortedTickets); // To store all fetched and sorted tickets
-        setDisplayedTickets(sortedTickets); // To display all sorted tickets initially
-      } catch (error) {
-        console.error("Failed to fetch tickets:", error);
-      }
-    };
-
-    fetchTickets();
-  }, []);
-
-  // Clipboard copy function
-  const copyToClipboard = (text) => {
-    // Check if navigator.clipboard is available
-    if (navigator.clipboard) {
-      // Use the modern Clipboard API (navigator.clipboard.writeText)
-      navigator.clipboard
-        .writeText(text)
-        .then(() => {
-          // Update the copied state for the specific text
-          setCopiedTicketNos((prev) => ({ ...prev, [text]: true }));
-          setTimeout(() => {
-            setCopiedTicketNos((prev) => ({ ...prev, [text]: false }));
-          }, 2000);
-        })
-        .catch((err) => {
-          console.error("Failed to copy text using Clipboard API", err);
-          // alert("Failed to copy ticket number");
-        });
-    } else {
-      // Fallback to execCommand if clipboard API is not available (older browsers)
-      const textArea = document.createElement("textarea");
-      textArea.value = text;
-      document.body.appendChild(textArea);
-      textArea.select();
-      textArea.setSelectionRange(0, 99999); // For mobile devices
-
-      try {
-        const successful = document.execCommand("copy");
-        if (successful) {
-          // Update the copied state for the specific text
-          setCopiedTicketNos((prev) => ({ ...prev, [text]: true }));
-
-          // Reset copied state after 2 seconds
-          setTimeout(() => {
-            setCopiedTicketNos((prev) => ({ ...prev, [text]: false }));
-          }, 2000);
-
-          console.log("Text copied successfully using execCommand");
-          // alert("Ticket number copied to clipboard!");
-        } else {
-          console.error("Failed to copy text using execCommand");
-          // alert("Failed to copy ticket number");
-        }
-      } catch (err) {
-        console.error("Error copying text: ", err);
-        // alert("Failed to copy ticket number");
-      } finally {
-        document.body.removeChild(textArea); // Clean up
-      }
+      setTickets(sortedTickets);
+      setDisplayedTickets(sortedTickets); // Add this line
+      setLoading(false);
+    } catch (error) {
+      console.error("Failed to fetch tickets:", error);
+      setError("Failed to fetch tickets. Please try again later.");
+      setLoading(false);
     }
   };
+
+  fetchTickets();
+}, []);
+
+  // Clipboard copy function
+const copyToClipboard = (text) => {
+  // Check if navigator.clipboard is available
+  if (navigator.clipboard) {
+    // Use the modern Clipboard API (navigator.clipboard.writeText)
+    navigator.clipboard
+      .writeText(text)
+      .then(() => {
+        // Update the copied state for the specific text
+        setCopiedTicketNos((prev) => ({ ...prev, [text]: true }));
+
+        // Show alert after text is copied
+        alert("Ticket number copied to clipboard!");
+
+        setTimeout(() => {
+          setCopiedTicketNos((prev) => ({ ...prev, [text]: false }));
+        }, 2000);
+      })
+      .catch((err) => {
+        console.error("Failed to copy text using Clipboard API", err);
+        // alert("Failed to copy ticket number");
+      });
+  } else {
+    // Fallback to execCommand if clipboard API is not available (older browsers)
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    textArea.setSelectionRange(0, 99999); // For mobile devices
+
+    try {
+      const successful = document.execCommand("copy");
+      if (successful) {
+        // Update the copied state for the specific text
+        setCopiedTicketNos((prev) => ({ ...prev, [text]: true }));
+
+        // Show alert after text is copied
+        alert("Ticket number copied to clipboard!");
+
+        // Reset copied state after 2 seconds
+        setTimeout(() => {
+          setCopiedTicketNos((prev) => ({ ...prev, [text]: false }));
+        }, 2000);
+
+        console.log("Text copied successfully using execCommand");
+      } else {
+        console.error("Failed to copy text using execCommand");
+        // alert("Failed to copy ticket number");
+      }
+    } catch (err) {
+      console.error("Error copying text: ", err);
+      // alert("Failed to copy ticket number");
+    } finally {
+      document.body.removeChild(textArea); // Clean up
+    }
+  }
+};
+
 
   //for pages
   const handleRowsPerPageChange = (e) => {
     setRowsPerPage(Number(e.target.value));
   };
-  // Modify the handleSearch function
-  const handleSearch = (event) => {
-    setSearchQuery(event.target.value);
-    setCurrentPage(1); // Reset to first page when searching
-  };
+ const handleSearch = (event) => {
+  const searchTerm = event.target.value.toLowerCase().trim();
+  setSearchQuery(searchTerm);
+  setCurrentPage(1);
 
-  // Update the filteredTickets logic
-  const filteredTickets = tickets.filter((ticket) => {
-    const searchTerm = searchQuery.toLowerCase().trim();
+  if (!searchTerm) {
+    setDisplayedTickets(tickets);
+    return;
+  }
 
-    // If search is empty, return all tickets
-    if (!searchTerm) return true;
-
-    // Create an object with all searchable fields
+  const filtered = tickets.filter((ticket) => {
     const searchableFields = {
       ticketNo: ticket.ticketNo?.toString().toLowerCase() || "",
       name: ticket.name?.toLowerCase() || "",
       companyName: ticket.companyName?.toLowerCase() || "",
       issueCategory: ticket.issueCategory?.toLowerCase() || "",
       date: formatDate(new Date(ticket.date))?.toLowerCase() || "",
-      eta: etaData[ticket.ticketNo]?.toLowerCase() || "",
+      time: ticket.time?.toLowerCase() || "",
+      status: ticket.status?.toLowerCase() || ""
     };
 
-    // Return true if any field contains the search term
-    return Object.values(searchableFields).some((value) =>
+    return Object.values(searchableFields).some(value => 
       value.includes(searchTerm)
     );
   });
+
+  setDisplayedTickets(filtered);
+};
+  // Update the filteredTickets logic
+  // const filteredTickets = tickets.filter((ticket) => {
+  //   const searchTerm = searchQuery.toLowerCase().trim();
+
+  //   // If search is empty, return all tickets
+  //   if (!searchTerm) return true;
+
+  //   // Create an object with all searchable fields
+  //   const searchableFields = {
+  //     ticketNo: ticket.ticketNo?.toString().toLowerCase() || "",
+  //     name: ticket.name?.toLowerCase() || "",
+  //     companyName: ticket.companyName?.toLowerCase() || "",
+  //     issueCategory: ticket.issueCategory?.toLowerCase() || "",
+  //     date: formatDate(new Date(ticket.date))?.toLowerCase() || "",
+  //     eta: etaData[ticket.ticketNo]?.toLowerCase() || "",
+  //   };
+
+  //   // Return true if any field contains the search term
+  //   return Object.values(searchableFields).some((value) =>
+  //     value.includes(searchTerm)
+  //   );
+  // });
 
   // Fetch tickets on component mount
   const fetchTickets = async () => {
@@ -284,22 +308,22 @@ const OpenticketAdmin = () => {
   };
 
   // Sort tickets based on the sort order
-  const sortedTickets = [...filteredTickets].sort((a, b) => {
-    if (sortOrder === "date") {
-      return new Date(b.createdDate) - new Date(a.createdDate);
-    } else if (sortOrder === "category") {
-      return a.issueCategory.localeCompare(b.issueCategory);
-    }
-    return 0; // No sorting
-  });
+  // const sortedTickets = [...filteredTickets].sort((a, b) => {
+  //   if (sortOrder === "date") {
+  //     return new Date(b.createdDate) - new Date(a.createdDate);
+  //   } else if (sortOrder === "category") {
+  //     return a.issueCategory.localeCompare(b.issueCategory);
+  //   }
+  //   return 0; // No sorting
+  // });
 
-  const totalEntries = sortedTickets.length;
+  const totalEntries = displayedTickets.length;
   const indexOfLastTicket = currentPage * rowsPerPage;
   const indexOfFirstTicket = indexOfLastTicket - rowsPerPage;
-  const currentTickets = sortedTickets.slice(
-    indexOfFirstTicket,
-    indexOfLastTicket
-  );
+  // const currentTickets = sortedTickets.slice(
+  //   indexOfFirstTicket,
+  //   indexOfLastTicket
+  // );
   const totalPages = Math.ceil(totalEntries / rowsPerPage);
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
@@ -370,7 +394,7 @@ const OpenticketAdmin = () => {
   };
 
   return (
-    <div className="flex flex-col mt-20 ml-32 h-full w-[88%]">
+    <div className="flex flex-col mt-20 ml-32 h-full w-[88%] xl:pl-[10%] 2xl:pl-[10%] lg:pl-[15%]">
       <div className="flex justify-between items-center bg-white h-20">
         <div className="flex items-center mb-4">
           <span
@@ -464,11 +488,8 @@ const OpenticketAdmin = () => {
                   </thead>
                   <tbody>
                     {displayedTickets
-                      .slice(
-                        (currentPage - 1) * rowsPerPage,
-                        currentPage * rowsPerPage
-                      )
-                      .map((ticket) => {
+  .slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage)
+  .map((ticket) => {
                         const eta = etaData[ticket.ticketNo] || "N/A";
 
                         // Determine the background color based on ticket status

@@ -38,7 +38,9 @@ const HomeAdmin = () => {
   useEffect(() => {
     const fetchImages = async () => {
       try {
-        const response = await axios.get( `${import.meta.env.VITE_API_URL}/api/images`);
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL}/api/images`
+        );
         setImages(response.data);
       } catch (error) {
         console.error("Error fetching images:", error);
@@ -72,7 +74,7 @@ const HomeAdmin = () => {
     formData.append("image", file);
 
     try {
-      await axios.post( `${import.meta.env.VITE_API_URL}/api/upload`, formData, {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/upload`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -80,7 +82,7 @@ const HomeAdmin = () => {
 
       // Fetch updated images after upload
       const updatedImagesResponse = await axios.get(
-         `${import.meta.env.VITE_API_URL}/api/images`
+        `${import.meta.env.VITE_API_URL}/api/images`
       );
       setImages(updatedImagesResponse.data);
       setSelectedImage(null);
@@ -100,7 +102,9 @@ const HomeAdmin = () => {
     if (selectedImageToDelete) {
       try {
         await axios.delete(
-          `${import.meta.env.VITE_API_URL}/api/images/${selectedImageToDelete._id}`
+          `${import.meta.env.VITE_API_URL}/api/images/${
+            selectedImageToDelete._id
+          }`
         );
 
         // Remove the deleted image from the state
@@ -146,13 +150,7 @@ const HomeAdmin = () => {
 
   // Sample data for Pie Chart (Category Distribution)
   const pieChartData = {
-    labels: [
-      "CCTV",
-      "Access Control",
-      "Fire Alarm",
-      "PA System",
-      "Other",
-    ],
+    labels: ["CCTV", "Access Control", "Fire Alarm", "PA System", "Other"],
     datasets: [
       {
         data: [12, 19, 3, 5, 2],
@@ -263,7 +261,7 @@ const HomeAdmin = () => {
         </div>
 
         {/* Metrics Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6 px-2 sm:px-4 lg:px-8 lg:pl-0">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6">
           {metricsData.map((metric, index) => (
             <div
               key={index}
@@ -275,9 +273,7 @@ const HomeAdmin = () => {
                 >
                   {metric.title}
                 </h3>
-                <p
-                  className={` font-poppins text-xl sm:text-4xl `}
-                >
+                <p className={`font-poppins text-xl sm:text-4xl `}>
                   {metric.value}
                 </p>
               </div>
@@ -288,11 +284,11 @@ const HomeAdmin = () => {
         {/* Main Content - Upper Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
           {/* Image Section */}
-          <div className="relative flex-1 w-full xs:h-[250px] md:h-[550px] ">
-            {/* Upload Icon - Moved inside the images container */}
+          <div className="relative flex-1 w-full xs:h-[250px] md:h-[550px]">
+            {/* Upload Icon */}
             <div className="absolute top-2 left-1/2 transform -translate-x-1/2 flex gap-0 z-10">
               {/* Upload Button */}
-              <div className="text-gray-600 cursor-pointer  p-2 rounded-lg justify-center">
+              <div className="text-gray-600 cursor-pointer  p-2 rounded-lg justify-center bg-black">
                 <label htmlFor="image-upload">
                   <img src="/edit.png" alt="" srcset="" className="w-5" />
                 </label>

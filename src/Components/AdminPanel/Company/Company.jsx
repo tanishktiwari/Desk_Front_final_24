@@ -365,7 +365,7 @@ const addNewUserDetail = () => {
 
 
   return (
-    <div className="max-w-6xl mx-auto p-4 ml-[12%] mt-14">
+    <div className="flex flex-col mt-20 ml-32 h-full w-[88%] xl:pl-[10%] 2xl:pl-[10%] lg:pl-[15%] font-poppins">
       {/* Statistics section */}
       <div className="flex justify-between items-center bg-white p-6 shadow-md rounded-md mb-6">
         <div className="flex items-center">
@@ -375,7 +375,7 @@ const addNewUserDetail = () => {
             className="mr-4 h-16 w-16"
           />
           <div className="flex flex-col items-start">
-            <div className="text-4xl font-semibold text-green-600">
+            <div className="text-4xl font-semibold text-green-600 font-poppins">
               {totalEntries}
             </div>
             <div className="text-gray-500">Total Company</div>
@@ -388,7 +388,7 @@ const addNewUserDetail = () => {
             className="mr-4 h-16 w-16"
           />
           <div className="flex flex-col items-start">
-            <div className="text-4xl font-semibold text-gray-800">
+            <div className="text-4xl font-semibold text-gray-800 font-poppins">
               {totalEntries}
             </div>
             <div className="text-gray-500">Companies</div>
@@ -401,7 +401,7 @@ const addNewUserDetail = () => {
             className="mr-4 h-16 w-16"
           />
           <div className="flex flex-col items-start">
-            <div className="text-4xl font-semibold text-green-600">189</div>
+            <div className="text-4xl font-semibold text-green-600 font-poppins">189</div>
             <div className="text-gray-500">Active Tickets</div>
           </div>
         </div>
@@ -430,7 +430,7 @@ const addNewUserDetail = () => {
                 />
               )}
               <button
-                className="bg-blue-500 text-white px-4 py-2 rounded-md"
+                className="bg-buttoncolor text-white px-4 py-2 rounded-md"
                 onClick={handleAddClick}
               >
                 ADD Company

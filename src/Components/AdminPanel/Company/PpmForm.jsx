@@ -384,9 +384,9 @@ const PpmForm = () => {
     </div>
     {/* {error && <div className="error-message">{error}</div>} */}
 
-      <div className="w-1/2">
+      <div className="w-full">
         <label htmlFor="company-name">
-          Company Name<span className="required-star">*</span>
+          Company Name<span className="required-star mr-10">*</span>
         </label>
         <select
           id="company-name"

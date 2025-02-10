@@ -22,7 +22,7 @@ const Footer = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row lg:justify-center gap-8">
           {/* Left Section - Significantly increased left padding */}
-          <div className="flex flex-col items-center lg:items-start space-y-6 lg:w-1/2 ">
+          <div className="flex flex-col items-center lg:items-start space-y-6 lg:w-1/2 lg:pl-[25%] 2xl:pl-[17%] xl:pl-0">
             {/* Logo */}
             <div
               className="relative w-[200px] h-[120px]"

@@ -102,7 +102,7 @@ const PopUpForm = ({ onClose, ticketNumber }) => {
 
         {/* Modal Content */}
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl  text-center ml-[40%] font-poppins">Ticket Details</h2>
+          {/* <h2 className="text-xl  text-center ml-[40%] font-poppins">Ticket Details</h2> */}
         </div>
           <div className="ticket flex items-center justify-center mb-12">
             <span style={{ marginRight: '8px' }} className="font-poppins ">Your Deskassure ID is</span>

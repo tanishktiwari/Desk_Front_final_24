@@ -166,7 +166,7 @@ const Home = () => {
           fetchChartData(mobileNumber);
 
           const imagesResponse = await axios.get(
-             `${import.meta.env.VITE_API_URL}/api/images`
+            `${import.meta.env.VITE_API_URL}/api/images`
           );
           setImages(imagesResponse.data);
 
@@ -194,27 +194,26 @@ const Home = () => {
     }
   }, [images.length]);
   // Sample data for Metrics Cards
-  // Update the metricsData to dynamically calculate total open and closed tickets
-const metricsData = [
-  {
-    title: "Monthly ETA",
-    value: "24hrs",
-    bgColor: "bg-blue-100",
-    textColor: "text-blue-600",
-  },
-  {
-    title: "Open Tickets",
-    value: chartData.open.reduce((a, b) => a + b, 0).toString(),
-    bgColor: "bg-green-100",
-    textColor: "text-green-600",
-  },
-  {
-    title: "Closed Tickets",
-    value: chartData.closed.reduce((a, b) => a + b, 0).toString(),
-    bgColor: "bg-purple-100",
-    textColor: "text-purple-600",
-  },
-];
+  const metricsData = [
+    {
+      title: "Monthly ETA",
+      value: "24hrs",
+      bgColor: "bg-blue-100",
+      textColor: "text-blue-600",
+    },
+    {
+      title: "Open Tickets",
+      value: chartData.open.reduce((a, b) => a + b, 0).toString(),
+      bgColor: "bg-green-100",
+      textColor: "text-green-600",
+    },
+    {
+      title: "Total Tickets Raised (Monthly)",
+      value: chartData.closed.reduce((a, b) => a + b, 0).toString(),
+      bgColor: "bg-purple-100",
+      textColor: "text-purple-600",
+    },
+  ];
   return (
     <div className="min-h-screen bg-white lg:ml-64">
       <div className="max-w-[1920px] mx-auto px-2 sm:px-4 lg:px-10 py-8 sm:py-16 lg:py-24 xs:pt-20">
@@ -229,8 +228,8 @@ const metricsData = [
             Foxnet.
           </p>
         </div>
-          {/* Metrics Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6 px-2 sm:px-4 lg:px-8 lg:pl-0">
+        {/* Metrics Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6">
           {metricsData.map((metric, index) => (
             <div
               key={index}
@@ -238,23 +237,22 @@ const metricsData = [
             >
               <div className="flex flex-col items-center justify-center">
                 <h3
-                  className={`font-poppins text-base sm:text-lg  mb-1 sm:mb-2`}
+                  className={`font-poppins text-base sm:text-lg mb-1 sm:mb-2`}
                 >
                   {metric.title}
                 </h3>
-                <p
-                  className={`font-poppins text-xl sm:text-4xl`}
-                >
+                <p className={`font-poppins text-xl sm:text-4xl`}>
                   {metric.value}
                 </p>
               </div>
             </div>
           ))}
         </div>
+
         {/* Main Content - Upper Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
           {/* Image Section */}
-          <div className="relative flex-1 w-full xs:h-[250px] md:h-[550px] ">
+          <div className="relative flex-1 w-full xs:h-[250px] md:h-[550px]">
             {images.length > 0 ? (
               <>
                 <img
@@ -286,7 +284,7 @@ const metricsData = [
 
           {/* Category Distribution */}
           <div className="bg-white p-2 sm:p-4 rounded-lg border-2 border-gray-200">
-            <div className="flex justify-end mb-2 sm:mb-4 ">
+            <div className="flex justify-center mb-2 sm:mb-4 mt-7 lg:ml-6">
               <button className="w-full sm:w-40 lg:w-40 bg-custom-gradient text-white font-poppins font-light py-2 lg:py-3 rounded-xl shadow-md text-xs sm:text-sm">
                 Category Distribution
               </button>

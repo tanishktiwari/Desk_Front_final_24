@@ -246,7 +246,11 @@ const IssueCategoryDetails = () => {
 
   // Filter and pagination logic
   const filteredCategories = categories.filter(category =>
-    category.name.toLowerCase().includes(searchTerm.toLowerCase())
+    category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (category.company && category.company.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (category.gst && category.gst.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (category.website && category.website.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (category.address && category.address.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const paginatedCategories = filteredCategories.slice(
@@ -258,9 +262,9 @@ const IssueCategoryDetails = () => {
   const totalPages = Math.ceil(totalEntries / itemsPerPage);
 
   return (
-    <div className="max-w-7xl mx-auto p-2 md:p-4 md:ml-[12%] mt-4 md:mt-20 2xl:pl-[10%] 2xl:pt-20 lg:pl-[15%] lg:pt-20 sm:mt-20 xs:mt-20  ">
+    <div className="flex flex-col mt-20 ml-32 h-full w-[88%] xl:pl-[10%] 2xl:pl-[10%] lg:pl-[15%] font-poppins">
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="flex justify-between items-center bg-white p-6 shadow-md rounded-md mb-6">
         <StatCard
           icon="/Group_10.png"
           title="Total Issue Categories"
@@ -279,7 +283,7 @@ const IssueCategoryDetails = () => {
       </div>
 
       {/* Main Content */}
-      <div className="bg-white p-4 md:p-6 shadow-md rounded-md">
+      <div className="bg-white p-6 shadow-md rounded-md">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-6">
           <h2 className="text-xl md:text-2xl font-semibold">Company Details</h2>
@@ -289,14 +293,17 @@ const IssueCategoryDetails = () => {
               {showSearchBox && (
                 <input
                   type="text"
-                  placeholder="Search..."
+                  placeholder="Search by Company, Name, GST, Website, Address..."
                   value={searchTerm}
                   onChange={handleSearchChange}
                   className="w-full md:w-auto border rounded-md py-2 px-4 pr-10"
                 />
               )}
               <button
-                onClick={() => setShowSearchBox(!showSearchBox)}
+                onClick={() => {
+                  setShowSearchBox(!showSearchBox);
+                  setSearchTerm(""); // Reset search term when search box is toggled
+                }}
                 className="absolute right-2 top-1/2 transform -translate-y-1/2"
               >
                 {showSearchBox ? <FaTimes /> : <FaSearch />}
@@ -304,7 +311,7 @@ const IssueCategoryDetails = () => {
             </div>
             
             <button
-              className="w-full md:w-auto bg-blue-500 text-white px-4 py-2 rounded-md"
+              className="w-full md:w-auto bg-buttoncolor text-white px-4 py-2 rounded-md"
               onClick={handleAddClick}
             >
               ADD Category

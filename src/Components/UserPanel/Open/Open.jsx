@@ -342,7 +342,7 @@ const handleTooltipHide = (ticketNo) => {
 };
 
   return (
-    <div className="flex flex-col mt-20 ml-32 h-full w-[88%]">
+    <div className="flex flex-col mt-20 ml-32 h-full w-[88%] xl:pl-[10%] 2xl:pl-[10%] lg:pl-[15%]">
       <div className="flex justify-between items-center bg-white h-20">
         <div className="flex items-center mb-4">
           <span

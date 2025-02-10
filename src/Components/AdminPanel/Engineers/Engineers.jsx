@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { FaEdit, FaTrash, FaEnvelope, FaPhone } from "react-icons/fa";
 
 const Engineers = () => {
-  // ... Keep all existing state and functions the same ...
   const [showPopup, setShowPopup] = useState(false);
   const [engineerData, setEngineerData] = useState({
     name: "",
@@ -23,11 +22,10 @@ const Engineers = () => {
     mobile: "",
   });
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchCategory, setSearchCategory] = useState("all"); // New state for search category
   const [searchVisible, setSearchVisible] = useState(false);
   const companyCount = localStorage.getItem("totalCompanyCount") || "0";
 
-  // Keep all existing functions (fetchEngineers, handleSubmit, etc.)
-  // ... 
   const fetchEngineers = async () => {
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/engineers`);
@@ -45,16 +43,30 @@ const Engineers = () => {
     fetchEngineers();
   }, []);
 
+  // Modified search logic to handle category-based filtering
   const filteredEngineers = engineers.filter((engineer) => {
     const searchValue = searchTerm.toLowerCase();
-    return (
-      (engineer.title && engineer.title.toLowerCase().includes(searchValue)) ||
-      (engineer.name && engineer.name.toLowerCase().includes(searchValue)) ||
-      (engineer.email && engineer.email.toLowerCase().includes(searchValue)) ||
-      (engineer.mobile && engineer.mobile.toLowerCase().includes(searchValue)) ||
-      (engineer.contractType && engineer.contractType.toLowerCase().includes(searchValue)) ||
-      (engineer.managerName && engineer.managerName.toLowerCase().includes(searchValue))
-    );
+    
+    switch (searchCategory) {
+      case "name":
+        return engineer.name && engineer.name.toLowerCase().includes(searchValue);
+      case "email":
+        return engineer.email && engineer.email.toLowerCase().includes(searchValue);
+      case "mobile":
+        return engineer.mobile && engineer.mobile.toLowerCase().includes(searchValue);
+      case "title":
+        return engineer.title && engineer.title.toLowerCase().includes(searchValue);
+      case "all":
+      default:
+        return (
+          (engineer.title && engineer.title.toLowerCase().includes(searchValue)) ||
+          (engineer.name && engineer.name.toLowerCase().includes(searchValue)) ||
+          (engineer.email && engineer.email.toLowerCase().includes(searchValue)) ||
+          (engineer.mobile && engineer.mobile.toLowerCase().includes(searchValue)) ||
+          (engineer.contractType && engineer.contractType.toLowerCase().includes(searchValue)) ||
+          (engineer.managerName && engineer.managerName.toLowerCase().includes(searchValue))
+        );
+    }
   });
 
   const totalEntries = filteredEngineers.length;
@@ -67,6 +79,7 @@ const Engineers = () => {
 
   const totalPages = Math.ceil(filteredEngineers.length / itemsPerPage);
 
+  // Rest of the handlers remain the same
   const handleAddClick = () => {
     setShowPopup(true);
     setEditingEngineerId(null);
@@ -208,9 +221,9 @@ const Engineers = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-2 md:p-4 md:ml-[12%] mt-4 md:mt-20 2xl:pl-[10%] 2xl:pt-20 lg:pl-[15%] lg:pt-20 sm:mt-20 xs:mt-20">
+    <div className="flex flex-col mt-20 ml-32 h-full w-[88%] xl:pl-[10%] 2xl:pl-[10%] lg:pl-[15%] font-poppins">
       {/* Statistics section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white p-3 md:p-6 shadow-md rounded-md mb-4 md:mb-6">
+      <div className="flex justify-between items-center bg-white p-6 shadow-md rounded-md mb-6">
         <div className="flex items-center justify-center md:justify-start p-4 bg-gray-50 rounded-lg">
           <img src="/Group_10.png" alt="Operator Icon" className="mr-2 md:mr-4 h-12 w-12 md:h-16 md:w-16" />
           <div className="flex flex-col">
@@ -238,7 +251,7 @@ const Engineers = () => {
       </div>
 
       {/* Main content section */}
-      <div className="bg-white p-3 md:p-6 shadow-md rounded-md">
+      <div className="bg-white p-6 shadow-md rounded-md">
         {/* Header and Search */}
         <div className="bg-white p-3 md:p-6 shadow-md rounded-md mb-4 md:mb-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
@@ -248,16 +261,29 @@ const Engineers = () => {
                 <img src='/search.png' alt="Search" className="w-6 h-6" />
               </button>
               {searchVisible && (
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="border rounded-md py-1 md:py-2 px-2 md:px-4 w-full md:w-auto"
-                />
+                <div className="flex gap-2">
+                  <select
+                    value={searchCategory}
+                    onChange={(e) => setSearchCategory(e.target.value)}
+                    className="border rounded-md py-1 md:py-2 px-2 md:px-4"
+                  >
+                    <option value="all">All</option>
+                    <option value="name">Name</option>
+                    <option value="email">Email</option>
+                    <option value="mobile">Mobile</option>
+                    <option value="title">Title</option>
+                  </select>
+                  <input
+                    type="text"
+                    placeholder="Search..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="border rounded-md py-1 md:py-2 px-2 md:px-4 w-full md:w-auto"
+                  />
+                </div>
               )}
               <button
-                className="bg-blue-500 text-white px-3 md:px-4 py-1 md:py-2 rounded-md text-sm md:text-base w-full md:w-auto"
+                className="bg-buttoncolor text-white px-3 md:px-4 py-1 md:py-2 rounded-md text-sm md:text-base w-full md:w-auto"
                 onClick={handleAddClick}
               >
                 ADD Engineer
@@ -266,7 +292,7 @@ const Engineers = () => {
           </div>
         </div>
 
-        {/* Desktop Table (hidden on mobile) */}
+        {/* Desktop Table */}
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full border-collapse">
             <thead>
@@ -305,7 +331,7 @@ const Engineers = () => {
           </table>
         </div>
 
-        {/* Mobile Cards (hidden on desktop) */}
+      {/* Mobile Cards (hidden on desktop) */}
         <div className="md:hidden grid grid-cols-1 gap-4">
           {paginatedEngineers.map((engineer) => (
             <div key={engineer._id} className="bg-gray-50 p-4 rounded-lg shadow">
@@ -360,7 +386,7 @@ const Engineers = () => {
       </div>
 
       {/* Responsive pagination */}
-      <div className="flex flex-col md:flex-row justify-between items-center mt-4 md:mt-6 gap-2 text-sm md:text-base">
+      <div className="flex justify-between items-center mt-6">
         <div className="text-center md:text-left">
           Showing data {startIndex} to {endIndex} of {totalEntries} entries
         </div>

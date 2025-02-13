@@ -95,6 +95,12 @@ const IssueCategoryDetails = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showSearchBox, setShowSearchBox] = useState(false);
   const itemsPerPage = 10;
+  const [activeTickets, setActiveTickets] = useState("0");
+  useEffect(() => {
+  // Get the value from localStorage
+  const totalOpenTickets = localStorage.getItem('totalOpenTickets') || "0";
+  setActiveTickets(totalOpenTickets);
+}, []); // Empty dependency array means this runs once when component mounts
 
   // Inject CSS
   useEffect(() => {
@@ -273,12 +279,12 @@ const IssueCategoryDetails = () => {
         <StatCard
           icon="/Group_11.png"
           title="Companies"
-          value={totalEntries}
+          value="16"
         />
         <StatCard
           icon="/Group_12.png"
           title="Active Tickets"
-          value="189"
+          value={activeTickets}
         />
       </div>
 

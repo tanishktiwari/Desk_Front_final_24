@@ -33,6 +33,29 @@ const HomeAdmin = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedImageToDelete, setSelectedImageToDelete] = useState(null);
+  // State to hold the Monthly ETA value
+  const [monthlyEta, setMonthlyEta] = useState(null);
+
+   // Fetch Monthly ETA on component mount
+ useEffect(() => {
+  const fetchAdminMonthlyETA = async () => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/admin-monthly-eta`
+      );
+      // Assuming the response contains totalDays which is the ETA value you want
+      const eta = response.data.totalDays; // Accessing totalDays from the response
+      setMonthlyEta(eta); // Update the state with the value of totalDays
+      console.log("Admin Monthly ETA:", eta); // Logging the received ETA value (totalDays)
+    } catch (error) {
+      console.error("Error fetching Admin Monthly ETA:", error);
+    }
+  };
+
+  fetchAdminMonthlyETA();
+}, []);
+
+
 
   // Fetch the latest uploaded image URL when the page loads
   useEffect(() => {
@@ -199,7 +222,7 @@ const HomeAdmin = () => {
   const metricsData = [
     {
       title: "Monthly ETA",
-      value: "24hrs",
+       value: monthlyEta ? `${monthlyEta} days` : "0 days",
       bgColor: "bg-blue-100",
       textColor: "text-blue-600",
     },

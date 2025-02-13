@@ -29,6 +29,12 @@ const Company = () => {
     gst: "",
   });
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeTickets, setActiveTickets] = useState("0");
+  useEffect(() => {
+  // Get the value from localStorage
+  const totalOpenTickets = localStorage.getItem('totalOpenTickets') || "0";
+  setActiveTickets(totalOpenTickets);
+}, []); // Empty dependency array means this runs once when component mounts
   // Function to format the date to dd-mm-yyyy
   const formatDate = (dateString) => {
     if (!dateString) return "";
@@ -401,7 +407,7 @@ const addNewUserDetail = () => {
             className="mr-4 h-16 w-16"
           />
           <div className="flex flex-col items-start">
-            <div className="text-4xl font-semibold text-green-600 font-poppins">189</div>
+            <div className="text-4xl font-semibold text-green-600 font-poppins">{activeTickets}</div>
             <div className="text-gray-500">Active Tickets</div>
           </div>
         </div>

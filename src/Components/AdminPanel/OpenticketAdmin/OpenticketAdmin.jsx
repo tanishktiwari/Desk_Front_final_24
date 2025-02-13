@@ -23,6 +23,7 @@ const OpenticketAdmin = () => {
   const [modalOpen, setModalOpen] = useState(false); // To control modal visibility
   const [selectedTicket, setSelectedTicket] = useState(null); // To store the selected ticket details
 
+
   const formatDate = (date) => {
     const options = { day: "2-digit", month: "short", year: "numeric" };
     return date.toLocaleDateString("en-GB", options);
@@ -147,28 +148,7 @@ const copyToClipboard = (text) => {
 
   setDisplayedTickets(filtered);
 };
-  // Update the filteredTickets logic
-  // const filteredTickets = tickets.filter((ticket) => {
-  //   const searchTerm = searchQuery.toLowerCase().trim();
 
-  //   // If search is empty, return all tickets
-  //   if (!searchTerm) return true;
-
-  //   // Create an object with all searchable fields
-  //   const searchableFields = {
-  //     ticketNo: ticket.ticketNo?.toString().toLowerCase() || "",
-  //     name: ticket.name?.toLowerCase() || "",
-  //     companyName: ticket.companyName?.toLowerCase() || "",
-  //     issueCategory: ticket.issueCategory?.toLowerCase() || "",
-  //     date: formatDate(new Date(ticket.date))?.toLowerCase() || "",
-  //     eta: etaData[ticket.ticketNo]?.toLowerCase() || "",
-  //   };
-
-  //   // Return true if any field contains the search term
-  //   return Object.values(searchableFields).some((value) =>
-  //     value.includes(searchTerm)
-  //   );
-  // });
 
   // Fetch tickets on component mount
   const fetchTickets = async () => {
@@ -307,27 +287,16 @@ const copyToClipboard = (text) => {
     }
   };
 
-  // Sort tickets based on the sort order
-  // const sortedTickets = [...filteredTickets].sort((a, b) => {
-  //   if (sortOrder === "date") {
-  //     return new Date(b.createdDate) - new Date(a.createdDate);
-  //   } else if (sortOrder === "category") {
-  //     return a.issueCategory.localeCompare(b.issueCategory);
-  //   }
-  //   return 0; // No sorting
-  // });
 
   const totalEntries = displayedTickets.length;
+  // Add this useEffect
+useEffect(() => {
+  localStorage.setItem('totalOpenTickets', totalEntries.toString());
+}, [totalEntries]);
   const indexOfLastTicket = currentPage * rowsPerPage;
   const indexOfFirstTicket = indexOfLastTicket - rowsPerPage;
-  // const currentTickets = sortedTickets.slice(
-  //   indexOfFirstTicket,
-  //   indexOfLastTicket
-  // );
   const totalPages = Math.ceil(totalEntries / rowsPerPage);
-
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
   const handleCheckboxChange = (ticketNo) => {
     const updatedSelectedTickets = new Set(selectedTickets);
     updatedSelectedTickets.has(ticketNo)
@@ -372,11 +341,17 @@ const copyToClipboard = (text) => {
   };
 
   const handleCloseModal = () => {
-    setModalOpen(false);
-    setSelectedTicket(null);
-    localStorage.removeItem("selectedTicketId");
-    fetchTickets();
-  };
+  setModalOpen(false);
+  setSelectedTicket(null);
+  localStorage.removeItem("selectedTicketId");
+  fetchTickets();
+
+  // Refresh the page after 2 seconds
+  setTimeout(() => {
+    console.log('Page refresh triggered after 2 seconds');
+    window.location.reload();
+  }, 1000);
+};
   const [tooltipVisible, setTooltipVisible] = useState({});
 
   const handleTooltipVisibility = (ticketNo) => {
@@ -392,7 +367,7 @@ const copyToClipboard = (text) => {
       [ticketNo]: false,
     }));
   };
-
+  
   return (
     <div className="flex flex-col mt-20 ml-32 h-full w-[88%] xl:pl-[10%] 2xl:pl-[10%] lg:pl-[15%]">
       <div className="flex justify-between items-center bg-white h-20">

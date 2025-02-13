@@ -253,6 +253,13 @@ const Operator = () => {
     currentPage * itemsPerPage
   );
   const totalPages = Math.ceil(totalEntries / itemsPerPage);
+  const [activeTickets, setActiveTickets] = useState("0");
+  useEffect(() => {
+  // Get the value from localStorage
+  const totalOpenTickets = localStorage.getItem('totalOpenTickets') || "0";
+  setActiveTickets(totalOpenTickets);
+}, []); // Empty dependency array means this runs once when component mounts
+
 
   return (
     <div className="flex flex-col mt-20 ml-32 h-full w-[88%] xl:pl-[10%] 2xl:pl-[10%] lg:pl-[15%] font-poppins">
@@ -271,14 +278,14 @@ const Operator = () => {
           <div className="flex flex-col">
             <div className="text-2xl md:text-4xl font-semibold text-gray-800">{companyCount}</div>
             <div className="text-sm md:text-base text-gray-500">Companies</div>
-            <div className="text-xs md:text-sm text-red-500">↓ 1% this month</div>
+            
           </div>
         </div>
 
         <div className="flex items-center justify-center md:justify-start p-4 bg-gray-50 rounded-lg">
           <img src="/Group_12.png" alt="Ticket Icon" className="mr-2 md:mr-4 h-12 w-12 md:h-16 md:w-16" />
           <div className="flex flex-col">
-            <div className="text-2xl md:text-4xl font-semibold text-green-600">189</div>
+            <div className="text-2xl md:text-4xl font-semibold text-green-600">{activeTickets}</div>
             <div className="text-sm md:text-base text-gray-500">Active Tickets</div>
           </div>
         </div>

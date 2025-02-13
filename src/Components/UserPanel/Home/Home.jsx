@@ -35,6 +35,12 @@ const Home = () => {
   const [error, setError] = useState(null);
   const [images, setImages] = useState([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [monthlyEta, setMonthlyEta] = useState({
+    totalHours: 0,
+    totalDays: 0,
+    exceeds24HoursCount: 0,
+    ticketsProcessed: 0,
+  });
 
   const miscellaneousCards = [
     {
@@ -158,6 +164,12 @@ const Home = () => {
     if (mobileNumber) {
       const fetchData = async () => {
         try {
+          // Fetch Monthly ETA data
+          const etaResponse = await axios.get(
+            `${import.meta.env.VITE_API_URL}/user-monthly-eta/${mobileNumber}`
+          );
+          setMonthlyEta(etaResponse.data);
+
           const operatorResponse = await axios.get(
             `${import.meta.env.VITE_API_URL}/api/operators/name/${mobileNumber}`
           );
@@ -197,7 +209,9 @@ const Home = () => {
   const metricsData = [
     {
       title: "Monthly ETA",
-      value: "24hrs",
+      value: monthlyEta.totalDays > 0
+        ? `${monthlyEta.totalDays} days`
+        : `${monthlyEta.totalHours} hrs`,
       bgColor: "bg-blue-100",
       textColor: "text-blue-600",
     },

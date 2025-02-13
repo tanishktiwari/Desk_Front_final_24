@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 const TicketDetailsModal = ({ isOpen, onClose, ticket }) => {
-const [engineers, setEngineers] = useState([]);
+  // Move all useState declarations to the top level
+  const [engineers, setEngineers] = useState([]);
   const [resolution, setResolution] = useState("");
   const [preventiveAction, setPreventiveAction] = useState("");
   const [warrantyCategory, setWarrantyCategory] = useState("");
@@ -18,19 +19,9 @@ const [engineers, setEngineers] = useState([]);
   const [isCheckboxChecked, setIsCheckboxChecked] = useState(false);
   const [showOptionPopup, setShowOptionPopup] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState(null);
-  const [selectedOption, setSelectedOption] = useState(null);
   const [userInput, setUserInput] = useState("");
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const [ticketDetails, setTicketDetails] = useState(null);
-
-  // Handle close button validation
-  const handleClose = () => {
-    if(engineerId === '') {
-      alert("Please select an engineer before closing.");
-      return;
-    }
-    onClose();
-  };
 
   // Handler for checkbox change
   const handleCheckboxChange = (e) => {
@@ -54,7 +45,6 @@ const [engineers, setEngineers] = useState([]);
     }
   };
 
-  // Copy to clipboard functionality
   const copyToClipboard = (text) => {
     if (navigator.clipboard) {
       navigator.clipboard
@@ -126,7 +116,11 @@ const [engineers, setEngineers] = useState([]);
           `${import.meta.env.VITE_API_URL}/operators/mobile/${contactNumber}`
         );
 
-        if (response.data && response.data.managers && response.data.managers.length > 0) {
+        if (
+          response.data &&
+          response.data.managers &&
+          response.data.managers.length > 0
+        ) {
           const emails = response.data.managers.map((manager) => manager.email);
           setManagerEmails(emails);
         } else {
@@ -137,48 +131,54 @@ const [engineers, setEngineers] = useState([]);
       }
     };
 
-    const fetchTicketDetails = async (id) => {
-      try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/ticket-details/${id}`
-        );
-        const details = response.data;
-        
-        // Update the state with API response data
-        setTicketDetails(details);
-        setTicketId(details.ticketId || "");
-        setResolution(details.resolution || "");
-        setPreventiveAction(details.preventiveAction || "");
-        setWarrantyCategory(details.warrantyCategory || "");
-        setTicketStatus(details.status || "");
-        
-        // If there's an engineer assigned, find their ID from the engineers list
-        if (details.engineerName && engineers.length > 0) {
-          const engineer = engineers.find(e => e.name === details.engineerName);
-          if (engineer) {
-            setEngineerId(engineer._id);
-          }
-        }
-
-        if (details.contactNumber) {
-          fetchOperatorDetails(details.contactNumber);
-        }
-      } catch (error) {
-        console.error("Error fetching ticket details:", error.message);
-      }
-    };
-
-    if (ticket) {
-      fetchTicketDetails(ticket.ticketId);
-    } else {
+ if (ticket) {
+  setTicketId(ticket.ticketId || "");
+  setResolution(ticket.resolution || "");
+  setPreventiveAction(ticket.preventiveAction || "");
+  setWarrantyCategory(ticket.warrantyCategory || "");
+  setTicketStatus(ticket.status === "In-Progress" ? "In Progress" : ticket.status || "");
+  // Add this line to set engineer ID if ticket is in progress
+  if (ticket.status === "In-Progress" && engineers.length > 0) {
+    const assignedEngineer = engineers.find(eng => eng.name === ticket.engineerName);
+    if (assignedEngineer) {
+      setEngineerId(assignedEngineer._id);
+    }
+  }
+  setTicketDetails(ticket);
+  
+  if (ticket.contactNumber) {
+    fetchOperatorDetails(ticket.contactNumber);
+  }
+} else {
       const storedTicketId = localStorage.getItem("selectedTicketId");
       if (storedTicketId) {
-        fetchTicketDetails(storedTicketId);
+        const fetchTicketDetails = async () => {
+          try {
+            const response = await axios.get(
+              `${import.meta.env.VITE_API_URL}/ticket-details/${storedTicketId}`
+            );
+            setTicketDetails(response.data);
+            setTicketId(response.data.ticketId);
+            setResolution(response.data.resolution || "");
+            setPreventiveAction(response.data.preventiveAction || "");
+            setWarrantyCategory(response.data.warrantyCategory || "");
+            setTicketStatus(response.data.status || "");
+
+            if (response.data.contactNumber) {
+              fetchOperatorDetails(response.data.contactNumber);
+            }
+          } catch (error) {
+            console.error("Error fetching ticket details:", error.message);
+          }
+        };
+
+        fetchTicketDetails();
       }
     }
-  }, [ticket, isOpen, engineers]);
+  }, [ticket, isOpen]);
 
-  // Handle submit functionality
+  
+
   const handleSubmit = async () => {
     try {
       console.log("Submitting report...");
@@ -187,23 +187,19 @@ const [engineers, setEngineers] = useState([]);
         (engineer) => engineer._id === engineerId
       );
       
-      const idToUses = ticket ? ticket.ticketId : ticketId;
-      const contactNumber = ticketDetails?.contactNumber || "";
-
+    const idToUses = ticket ? ticket.ticketId : ticketId;
+    const contactNumber = ticketDetails?.contactNumber || "";
       if (!selectedEngineer && ticketStatus !== "In Progress") {
         alert("Please select a valid engineer.");
         return;
       }
-
       const inProgressMessage = `Your ticket with ${idToUses} is now in-progress and engineer ${selectedEngineer.name} has been assigned.`;
-      
       // Send notification to operator's mobile
       if (contactNumber) {
         await axios.put(`${import.meta.env.VITE_API_URL}/notification/${contactNumber}`, {
           message: inProgressMessage
         });
       }
-
       const createdDate = ticketDetails?.createdDate
         ? new Date(ticketDetails.createdDate).toISOString().split("T")[0]
         : currentDateTime.toISOString().split("T")[0];
@@ -228,28 +224,39 @@ const [engineers, setEngineers] = useState([]);
 
       const idToUse = ticket ? ticket.ticketId : ticketId;
 
+      console.log("Report Data:", reportData);
+
       let operatorEmail = ticketDetails?.email;
       let managerEmails = [];
 
       if (ticketDetails?.contactNumber) {
         const operatorResponse = await axios.get(
-          `${import.meta.env.VITE_API_URL}/operators/mobile/${ticketDetails.contactNumber}`
+          `${import.meta.env.VITE_API_URL}/operators/mobile/${
+            ticketDetails.contactNumber
+          }`
         );
 
         operatorEmail = operatorResponse.data.email;
-        managerEmails = operatorResponse.data.managers?.map((manager) => manager.email) || [];
+        managerEmails =
+          operatorResponse.data.managers?.map((manager) => manager.email) || [];
       }
 
       const allEmails = [operatorEmail, ...managerEmails];
+      console.log("Operator Email:", operatorEmail);
+      console.log("Manager Emails:", managerEmails);
+      console.log("All Emails:", allEmails);
 
       if (ticketStatus === "Complete") {
-        const closedMessage = `Your ticket with ${idToUses} has been marked as closed.`;
-        
-        if (contactNumber) {
-          await axios.put(`${import.meta.env.VITE_API_URL}/notification/${contactNumber}`, {
-            message: closedMessage
-          });
-        }
+        console.log(
+          "Ticket status is 'Complete'. Updating and closing the ticket..."
+        );
+         const closedMessage = `Your ticket with ${idToUses} has been marked as closed.`;
+        // Send notification to operator's mobile
+      if (contactNumber) {
+        await axios.put(`${import.meta.env.VITE_API_URL}/notification/${contactNumber}`, {
+          message: closedMessage
+        });
+      }
        
         const updateResponse = await axios.put(
           `${import.meta.env.VITE_API_URL}/tickets/close/${idToUse}`,
@@ -265,14 +272,24 @@ const [engineers, setEngineers] = useState([]);
           }
         );
 
+        console.log("Ticket Updated Response:", updateResponse.data);
         setTicketDetails(updateResponse.data.ticket);
 
+        // ETA Calculation Section
         const etaData = {
+          // Ensure date is in "YYYY-MM-DD" format using toLocaleDateString
           date: ticketDetails?.date
-            ? new Date(ticketDetails.date).toLocaleDateString("en-CA")
-            : "",
-          time: ticketDetails?.time ? ticketDetails.time : "",
+            ? new Date(ticketDetails.date).toLocaleDateString("en-CA") // "en-CA" is the format for "YYYY-MM-DD"
+            : "", // Default to empty string if not available
+
+          // Use ticketDetails?.time or current time as fallback
+          time: ticketDetails?.time ? ticketDetails.time : "", // Default to empty string if not available
         };
+
+        // Log the formatted date and time
+        console.log("Calculating ETA with data:", etaData);
+
+        console.log("Calculating ETA with data:", etaData);
 
         const etaResponse = await axios.post(
           `${import.meta.env.VITE_API_URL}/tickets/calculate-eta/${idToUse}`,
@@ -280,15 +297,20 @@ const [engineers, setEngineers] = useState([]);
         );
 
         const calculatedEta = etaResponse.data.eta;
+        console.log("Calculated ETA Response:", etaResponse.data);
+        console.log("Calculated ETA Object:", calculatedEta);
+
         let etaFormatted;
         if (calculatedEta && typeof calculatedEta === "object") {
           const days = calculatedEta.totalDays || 0;
           etaFormatted = `${days}`;
+          console.log("Formatted ETA:", etaFormatted);
         } else {
           etaFormatted = "Invalid ETA";
+          console.log("Invalid ETA Calculation.");
         }
 
-        // Send WhatsApp message
+        // Sending WhatsApp Message
         const messageData = {
           to: `+91${ticketDetails?.contactNumber}`,
           sal: "Mr.",
@@ -298,32 +320,36 @@ const [engineers, setEngineers] = useState([]);
           eta: etaFormatted,
         };
 
+        console.log("Sending WhatsApp Message Data:", messageData);
         await axios.post(
           `${import.meta.env.VITE_API_URL}/send-whatsapp-closed`,
           messageData
         );
 
-        // Send email
+        // Sending Email
         const emailData = {
           recipientEmails: allEmails,
           ticketId: idToUse,
           issueCategory: ticketDetails?.issueCategory || "General Issue",
-          issueDescription: ticketDetails?.issueDescription || "No description provided.",
+          issueDescription:
+            ticketDetails?.issueDescription || "No description provided.",
           firstName: ticketDetails?.name || "Customer",
         };
 
+        console.log("Sending Email Data:", emailData);
         await axios.post(
           `${import.meta.env.VITE_API_URL}/send-closed-tickets-mail`,
           emailData
         );
 
-        // Send feedback email
+        // Sending Feedback Email
         const feedbackData = {
           recipientEmails: allEmails,
           ticketId: idToUse,
           firstName: ticketDetails?.name || "Customer",
         };
 
+        console.log("Sending Feedback Email Data:", feedbackData);
         await axios.post(
           `${import.meta.env.VITE_API_URL}/send-feedback-mail`,
           feedbackData
@@ -331,10 +357,12 @@ const [engineers, setEngineers] = useState([]);
 
         setShowSuccessPopup(true);
       } else if (ticketStatus === "In Progress") {
+        // Handle in progress status
         if (!selectedEngineer) {
           alert("Engineer not found or selected incorrectly.");
           return;
         }
+
 
         const inProgressResponse = await axios.put(
           `${import.meta.env.VITE_API_URL}/tickets/in-progress/${idToUse}`,
@@ -343,7 +371,9 @@ const [engineers, setEngineers] = useState([]);
           }
         );
 
+        console.log("Ticket In Progress Response:", inProgressResponse.data);
         setTicketDetails(inProgressResponse.data.ticket);
+        
 
         const inProgressMessageData = {
           to: `+91${selectedEngineer.mobile}`,
@@ -354,6 +384,10 @@ const [engineers, setEngineers] = useState([]);
           operatorMobile: ticketDetails?.contactNumber || "OperatorMobile",
         };
 
+        console.log(
+          "Sending In Progress WhatsApp Message Data:",
+          inProgressMessageData
+        );
         await axios.post(
           `${import.meta.env.VITE_API_URL}/send-whatsapp-assign-engineer`,
           inProgressMessageData
@@ -363,10 +397,12 @@ const [engineers, setEngineers] = useState([]);
           recipientEmails: allEmails,
           ticketId: idToUse,
           issueCategory: ticketDetails?.issueCategory || "General Issue",
-          issueDescription: ticketDetails?.issueDescription || "No description provided.",
+          issueDescription:
+            ticketDetails?.issueDescription || "No description provided.",
           firstName: ticketDetails?.name || "Customer",
         };
 
+        console.log("Sending In Progress Email Data:", emailDataInProgress);
         await axios.post(
           `${import.meta.env.VITE_API_URL}/send-in-progress-tickets-mail`,
           emailDataInProgress
@@ -381,11 +417,14 @@ const [engineers, setEngineers] = useState([]);
           engineerMobile: selectedEngineer ? selectedEngineer.mobile : "N/A",
         };
 
+        console.log("Sending In Progress WhatsApp Message:", inProgressMessage);
         await axios.post(
           `${import.meta.env.VITE_API_URL}/send-whatsapp-inprogress`,
           inProgressMessage
+          
         );
       } else {
+        // Handle other status updates
         await axios.put(
           `${import.meta.env.VITE_API_URL}/tickets/update/${idToUse}`,
           reportData
@@ -414,135 +453,324 @@ const [engineers, setEngineers] = useState([]);
 
   if (!isOpen) return null;
 
+
+  
   return (
-  <div className="fixed inset-0 flex justify-center items-center z-50 bg-black bg-opacity-50 p-4">
-    <div className="bg-white shadow-lg rounded-lg w-full max-w-7xl h-[90vh] md:h-[80vh] relative overflow-hidden flex flex-col">
-      {/* Logo and Header Section */}
-      <div className="flex justify-center -mb-6 pt-2 relative">
-        <img src="/4.png" alt="Logo" className="h-16 md:h-20" />
-      </div>
+    <div className="fixed inset-0 flex justify-center items-center z-50 bg-black bg-opacity-50">
+      <div className="fixed inset-0 flex justify-center items-center z-50 bg-black bg-opacity-50">
+        <div className="custom-div bg-white shadow-lg p-8 rounded-lg w-[90vw] max-w-7xl h-[80vh] max-h-[90vh] relative overflow-hidden mt-20 flex flex-col">
+          {/* Logo centered above the title */}
+          <div className="flex justify-center mt-0 -mb-6 pt-0 -top-8 relative">
+            <img src="/4.png" alt="Logo" className="h-20" />
+          </div>
 
-      {/* Close Button */}
-      <button
-        type="button"
-        className="absolute top-2 right-2 text-gray-600 text-4xl hover:text-gray-900 font-poppins"
-        onClick={handleClose}
-      >
-        &times;
-      </button>
+          {/* Close Button (x) positioned on the top right */}
+          <button
+            type="button"
+            className="text-gray-600 bg-none h-12 w-12 text-4xl hover:text-gray-900 absolute top-0 right-0 mt-0 mr-4 font-poppins"
+            onClick={onClose}
+          >
+            &times;
+          </button>
 
-      {/* Title Section */}
-      <div className="flex items-center justify-between px-4">
-        <div className="text-center w-full">
-          <h2 className="text-xl font-semibold font-poppins">Ticket Details</h2>
-        </div>
-      </div>
+          {/* Modal Title */}
+          <div className="flex items-center justify-between mb-4">
+            {/* Ticket Details Heading aligned slightly towards right */}
+            <div className="text-center pl-[43%]">
+              {/* <h2 className="text-xl font-semibold text-left font-poppins flex-1 ml-4">
+                Ticket Details
+              </h2> */}
+            </div>
+            {/* Checkbox and Label aligned on the right side */}
+            <div className="flex items-center mr-10 hidden">
+              <label
+                htmlFor="specialCheckbox"
+                className="mr-4 text-sm font-poppins cursor-pointer"
+              >
+                Under Observation
+              </label>
+              <input
+                type="checkbox"
+                id="specialCheckbox"
+                checked={isCheckboxChecked}
+                onChange={handleCheckboxChange}
+                className="h-4 w-4 text-buttoncolor rounded border-gray-300 focus:ring-blue-500 cursor-pointer"
+              />
+            </div>
+          </div>
 
-      {/* Ticket ID Section */}
-      <div className="flex items-center justify-center gap-2 p-2 mt-2">
-        <span className="font-poppins">Your Deskassure ID is</span>
-        <strong className="font-poppins">{ticketId}</strong>
-        <img
-          src={copiedTicketId ? "/copy_green.png" : "/copy.png"}
-          alt="Copy Icon"
-          className={`h-4 w-4 cursor-pointer ${copiedTicketId ? 'h-6 w-6' : ''}`}
-          onClick={() => copyToClipboard(ticketId)}
-        />
-        {copiedTicketId && (
-          <span className="text-green-500 text-sm font-poppins">Copied!</span>
-        )}
-      </div>
+          {/* Option Selection Popup */}
+          {showOptionPopup && (
+            <div className="fixed inset-0 flex items-center justify-center z-60 bg-black bg-opacity-50">
+              <div className="bg-white rounded-lg shadow-lg p-6 w-96">
+                <h3 className="text-lg font-semibold mb-4 font-poppins text-center">
+                  Select a Time Range
+                </h3>
+                <div className="flex flex-col space-y-3">
+                  {/* Dropdown Options 0 to 9 and Custom Input */}
+                  <label className="block text-gray-700 font-poppins">
+                    Select Time Range:
+                  </label>
+                  <select
+                    value={selectedOptions}
+                    onChange={(e) => setSelectedOptions(e.target.value)}
+                    className="block w-full bg-gray-200 border border-gray-300 text-gray-700 py-2 px-3 rounded font-poppins"
+                  >
+                    {/* Placeholder Option */}
+                    <option value="" disabled>
+                      Select a time range
+                    </option>
 
-      {/* Main Content Area */}
-      <div className="flex-grow overflow-auto px-4 pb-4">
-        <div className="flex flex-col md:flex-row gap-6">
-          {/* Left Section - User Input */}
-          <div className="w-full md:w-1/2 space-y-4">
-            <h3 className="text-md font-semibold font-poppins">User Input</h3>
-            
-            <div className="space-y-3">
-              <div>
-                <label className="block text-gray-700 font-poppins">Name:</label>
+                    {/* Options 0-9 */}
+                    {[...Array(10).keys()].map((i) => (
+                      <option key={i} value={`${i}`}>
+                        {i} days
+                      </option>
+                    ))}
+
+                    {/* Custom Input Option */}
+                    <option value="custom">Custom Input</option>
+                  </select>
+
+                  {/* Custom Input Option - Shows input field if "Custom Input" is selected */}
+                  {selectedOptions === "custom" && (
+                    <div className="mt-4">
+                      <label className="block text-gray-700 font-poppins">
+                        Enter Custom Number:
+                      </label>
+                      <input
+                        type="number"
+                        value={userInput}
+                        onChange={(e) => setUserInput(e.target.value)}
+                        className="block w-full bg-gray-200 border border-gray-300 text-gray-700 py-1 px-2 rounded font-poppins"
+                        placeholder="Enter a number"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Submit Button - Disabled until a valid option is selected */}
+                <button
+                  onClick={handleSubmitInput} // Handle submit for either predefined or custom input
+                  className={`mt-4 bg-buttoncolor text-white py-2 px-4 rounded  transition duration-200 font-poppins w-full ${
+                    !selectedOptions ||
+                    (selectedOptions === "custom" && !userInput)
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
+                  }`}
+                  disabled={
+                    !selectedOptions ||
+                    (selectedOptions === "custom" && !userInput)
+                  } // Disable if no option or custom input is empty
+                >
+                  Submit
+                </button>
+
+                <button
+                  onClick={() => {
+                    setShowOptionPopup(false); // Close the option popup
+                    setSelectedOptions(""); // Reset selected option
+                    setUserInput(""); // Clear custom input value
+                    setIsCheckboxChecked(false); // Reset the checkbox state
+                  }}
+                  className="mt-4 text-gray-600 hover:text-gray-800 py-2 px-4 w-full text-sm font-poppins bg-gray-300"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="ticket flex items-center justify-center mb-4">
+            <span style={{ marginRight: "8px" }} className="font-poppins">
+              Your Deskassure ID is
+            </span>
+            <strong className="font-poppins">{ticketId}</strong>
+
+            {/* Image before copying */}
+            {!copiedTicketId ? (
+              <img
+                src="/copy.png" // Path to the "copy" icon (before copy)
+                alt="Copy Icon"
+                className="h-4 w-4 ml-3 -mt-1 cursor-pointer"
+                onClick={() => copyToClipboard(ticketId)} // Trigger copy on click
+              />
+            ) : (
+              // Image after copying
+              <img
+                src="/copy_green.png" // Path to the "green copy" icon (after copy)
+                alt="Copied Icon"
+                className="h-6 w-6 ml-3 cursor-pointer"
+              />
+            )}
+
+            {/* Copied Message */}
+            {copiedTicketId && (
+              <span className="ml-2 text-green-500 text-sm font-poppins">
+                Copied!
+              </span>
+            )}
+          </div>
+
+          {/* Flex container for User Input and Admin Input side by side */}
+          <div className="flex flex-grow mb-4">
+            {/* Left Section: User Input */}
+            <div className="w-full sm:w-1/2 p-2 border-r border-gray-300 overflow-y-auto max-h-[80vh] pr-10">
+              <h3 className="text-md font-semibold mb-1 font-poppins">
+                User Input
+              </h3>
+
+              {/* User Information Fields */}
+
+              <div className="mb-2 mt-2 hidden">
+                {/* <label className="block text-gray-700 font-poppins">Created Date & Time</label> */}
+                <p className="block text-gray-700 font-poppins">
+                  Created Date and Time:{" "}
+                  {ticketDetails?.date && ticketDetails?.time
+                    ? `${ticketDetails.date} ${ticketDetails.time}`
+                    : "N/A"}
+                </p>
+              </div>
+              <div className="mb-2">
+                <label className="block text-gray-700 font-poppins">
+                  Name:
+                </label>
                 <input
                   type="text"
                   value={ticketDetails?.name || ""}
                   readOnly
-                  className="w-full bg-gray-200 border border-gray-300 text-gray-700 py-1 px-2 rounded font-poppins cursor-not-allowed"
+                  className="block w-full bg-gray-200 border border-gray-300 text-gray-700 py-1 px-2 rounded font-poppins read-only: cursor-not-allowed"
                 />
               </div>
+              {/* Manager Email */}
+              <div className="mb-2 hidden">
+                <label className="block text-gray-700 font-poppins">
+                  Manager's Email(s):
+                </label>
+                <div className="block w-full bg-gray-200 border border-gray-300 text-gray-700 py-1 px-2 rounded font-poppins read-only: cursor-not-allowed">
+                  {/* Display all manager emails */}
+                  {managerEmails.length > 0 ? (
+                    <ul className="list-disc pl-5">
+                      {managerEmails.map((email, index) => (
+                        <li key={index} className="text-gray-700">
+                          {email}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <span>No managers available</span>
+                  )}
+                </div>
+              </div>
 
-              <div>
-                <label className="block text-gray-700 font-poppins">Contact Number:</label>
+              <div className="mb-2">
+                <label className="block text-gray-700 font-poppins">
+                  Contact Number:
+                </label>
                 <input
                   type="text"
                   value={ticketDetails?.contactNumber || ""}
                   readOnly
-                  className="w-full bg-gray-200 border border-gray-300 text-gray-700 py-1 px-2 rounded font-poppins cursor-not-allowed"
+                  className="block w-full bg-gray-200 border border-gray-300 text-gray-700 py-1 px-2 rounded font-poppins read-only: cursor-not-allowed"
                 />
               </div>
 
-              <div>
-                <label className="block text-gray-700 font-poppins">Email ID:</label>
+              <div className="mb-2">
+                <label className="block text-gray-700 font-poppins">
+                  Email ID:
+                </label>
                 <input
                   type="email"
                   value={ticketDetails?.email || ""}
                   readOnly
-                  className="w-full bg-gray-200 border border-gray-300 text-gray-700 py-1 px-2 rounded font-poppins cursor-not-allowed"
+                  className="block w-full bg-gray-200 border border-gray-300 text-gray-700 py-1 px-2 rounded font-poppins read-only: cursor-not-allowed"
                 />
               </div>
 
-              <div>
-                <label className="block text-gray-700 font-poppins">Issue Category:</label>
+              {/* Other Fields */}
+              <div className="mb-2">
+                <label className="block text-gray-700 font-poppins">
+                  Issue Category:
+                </label>
                 <input
                   type="text"
                   value={ticketDetails?.issueCategory || "N/A"}
                   readOnly
-                  className="w-full bg-gray-200 border border-gray-300 text-gray-700 py-1 px-2 rounded font-poppins cursor-not-allowed"
+                  className="block w-full bg-gray-200 border border-gray-300 text-gray-700 py-1 px-2 rounded font-poppins read-only: cursor-not-allowed"
                 />
               </div>
 
-              <div>
-                <label className="block text-gray-700 font-poppins">Issue Description:</label>
+              <div className="mb-2">
+                <label className="block text-gray-700 font-poppins">
+                  Issue Description:
+                </label>
                 <textarea
                   value={ticketDetails?.issueDescription || ""}
                   readOnly
-                  className="w-full bg-gray-200 border border-gray-300 text-gray-700 py-1 px-2 rounded font-poppins cursor-not-allowed min-h-[100px]"
+                  className="block w-full bg-gray-200 border border-gray-300 text-gray-700 py-1 px-2 rounded font-poppins read-only: cursor-not-allowed"
+                />
+              </div>
+              <div className="mb-2 hidden ">
+                <label className="block text-gray-700 font-poppins">
+                  Created Date
+                </label>
+                <input
+                  value={ticketDetails?.date || ""}
+                  readOnly
+                  className="block w-full bg-gray-200 border border-gray-300 text-gray-700 py-1 px-2 rounded font-poppins"
+                />
+              </div>
+              <div className="mb-2 hidden">
+                <label className="block text-gray-700 font-poppins">
+                  Created Time
+                </label>
+                <input
+                  value={ticketDetails?.time || ""}
+                  readOnly
+                  className="block w-full bg-gray-200 border border-gray-300 text-gray-700 py-1 px-2 rounded font-poppins"
                 />
               </div>
             </div>
-          </div>
 
-          {/* Right Section - Admin Input */}
-          <div className="w-full md:w-1/2 space-y-4">
-            <h3 className="text-md font-semibold font-poppins">Admin Input</h3>
-            
-            <div className="space-y-3">
-              <div>
-                <label className="block text-gray-700 font-poppins">Resolution:</label>
+            {/* Right Section: Admin Input */}
+            <div className="w-full sm:w-1/2 p-2 overflow-y-auto max-h-[80vh] pl-10">
+              <h3 className="text-md font-semibold mb-1 font-poppins">
+                Admin Input
+              </h3>
+              {/* Other Admin Fields */}
+              <div className="mb-2">
+                <label className="block text-gray-700 font-poppins">
+                  Resolution:
+                </label>
                 <textarea
                   value={resolution}
                   onChange={(e) => setResolution(e.target.value)}
-                  className="w-full bg-white border border-gray-300 text-gray-700 py-1 px-2 rounded font-poppins min-h-[100px]"
+                  className="block w-full bg-white border border-gray-300 text-gray-700 py-1 px-2 rounded font-poppins"
                   placeholder="Enter resolution details"
                 />
               </div>
 
-              <div>
-                <label className="block text-gray-700 font-poppins">Preventive Action:</label>
+              <div className="mb-2">
+                <label className="block text-gray-700 font-poppins">
+                  Preventive Action:
+                </label>
                 <input
                   value={preventiveAction}
                   onChange={(e) => setPreventiveAction(e.target.value)}
-                  className="w-full bg-white border border-gray-300 text-gray-700 py-1 px-2 rounded font-poppins"
+                  className="block w-full bg-white border border-gray-300 text-gray-700 py-1 px-2 rounded font-poppins"
                   placeholder="Enter preventive action details"
                 />
               </div>
 
-              <div>
-                <label className="block text-gray-700 font-poppins">Warranty Category:</label>
+              {/* Dropdowns */}
+              <div className="mb-2">
+                <label className="block text-gray-700 font-poppins">
+                  Warranty Category:
+                </label>
                 <select
                   value={warrantyCategory}
                   onChange={(e) => setWarrantyCategory(e.target.value)}
-                  className="w-full bg-white border border-gray-300 text-gray-700 py-1 px-2 rounded font-poppins"
+                  className="block w-full bg-white border border-gray-300 text-gray-700 py-1 px-2 rounded font-poppins"
                 >
                   <option value="">Please select</option>
                   <option>Comprehensive AMC</option>
@@ -552,143 +780,81 @@ const [engineers, setEngineers] = useState([]);
                 </select>
               </div>
 
-              <div>
-          <label className="block text-gray-700 font-poppins">Engineer:</label>
-          <select
-            value={engineerId}
-            onChange={(e) => setEngineerId(e.target.value)}
-            className="w-full bg-white border border-gray-300 text-gray-700 py-1 px-2 rounded font-poppins"
-          >
-            <option value="">Select Engineer</option>
-            {engineers.map((engineer) => (
-              <option 
-                key={engineer._id} 
-                value={engineer._id}
-                selected={ticketDetails?.engineerName === engineer.name}
-              >
-                {engineer.name}
-              </option>
-            ))}
-          </select>
-        </div>
+              <div className="mb-2">
+                <label className="block text-gray-700 font-poppins">
+                  Engineer:
+                </label>
+       <select
+  value={engineerId}
+  onChange={(e) => setEngineerId(e.target.value)}
+  disabled={ticketStatus === "In-Progress"}
+  className="block w-full bg-white border border-gray-300 text-gray-700 py-1 px-2 rounded font-poppins"
+>
+  <option value="">Select Engineer</option>
+  {engineers.map((engineer) => (
+    <option key={engineer._id} value={engineer._id}>
+      {engineer.name}
+    </option>
+  ))}
+</select>
+              </div>
 
-        <div>
-          <label className="block text-gray-700 font-poppins">Ticket Status:</label>
-          <select
-            value={ticketStatus}
-            onChange={(e) => setTicketStatus(e.target.value)}
-            className="w-full bg-white border border-gray-300 text-gray-700 py-1 px-2 rounded font-poppins"
-          >
-            <option value="">Select Status</option>
-            <option value="Open">Open</option>
-            <option value="In-Progress">In-Progress</option>
-            <option value="Complete">Complete</option>
-          </select>
-        </div>
-
-              <div className="text-right">
-                <p className="text-gray-700 font-poppins text-sm">
-                  Current Date and Time: {currentDateTime ? currentDateTime.toLocaleString() : "N/A"}
+              <div className="mb-3">
+                <label className="block text-gray-700 font-poppins">
+                  Ticket Status:
+                </label>
+               <select
+  value={ticketStatus}
+  onChange={(e) => setTicketStatus(e.target.value)}
+  // disabled={ticketDetails?.status === "In-Progress"}
+  className="block w-full bg-white border border-gray-300 text-gray-700 py-1 px-2 rounded font-poppins"
+>
+  <option value="">Select Status</option>
+  <option value="Open">Open</option>
+  <option value="In Progress">In-Progress</option>
+  <option value="Complete">Complete</option>
+</select>
+              </div>
+              {/* Current Date and Time */}
+              <div className="mb-2 ml-56">
+                {/* <label className="block text-gray-700 font-poppins">Current Date and Time:</label> */}
+                <p className="block text-gray-700 font-poppins text-sm ">
+                  Current Date and Time:{" "}
+                  {currentDateTime ? currentDateTime.toLocaleString() : "N/A"}
                 </p>
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Submit Button */}
-      <div className="p-4 flex justify-center">
-        <button
-          onClick={handleSubmit}
-          className="bg-buttoncolor text-white py-2 px-8 rounded transition duration-200 font-poppins hover:bg-opacity-90"
-        >
-          Submit
-        </button>
+          {/* Submit Button */}
+          <div className="flex justify-center mt-2">
+            <button
+              onClick={handleSubmit}
+              className="bg-buttoncolor text-white py-2 px-4 rounded transition duration-200 h-10 w-40 font-poppins"
+            >
+              Submit
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Success Popup */}
       {showSuccessPopup && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-60">
           <div className="bg-white rounded-lg shadow-lg p-4 w-80 text-center">
-            <h3 className="text-lg font-bold mb-2 font-poppins">Success</h3>
-            <p className="font-poppins">Ticket has been closed successfully!</p>
+            <h3 className="text-lg font-bold mb-2">Success</h3>
+            <p>Ticket has been closed successfully!</p>
             <button
               onClick={handleClosePopup}
-              className="bg-blue-500 text-white py-1 px-4 rounded hover:bg-blue-600 transition duration-200 mt-2 font-poppins"
+              className="bg-blue-500 text-white py-1 px-4 rounded hover:bg-blue-600 transition duration-200 mt-2"
             >
               Close
             </button>
           </div>
         </div>
       )}
-
-      {/* Option Selection Popup */}
-      {showOptionPopup && (
-        <div className="fixed inset-0 flex items-center justify-center z-60 bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md mx-4">
-            <h3 className="text-lg font-semibold mb-4 font-poppins text-center">
-              Select a Time Range
-            </h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-gray-700 font-poppins">Select Time Range:</label>
-                <select
-                  value={selectedOptions}
-                  onChange={(e) => setSelectedOptions(e.target.value)}
-                  className="w-full bg-gray-200 border border-gray-300 text-gray-700 py-2 px-3 rounded font-poppins mt-1"
-                >
-                  <option value="" disabled>Select a time range</option>
-                  {[...Array(10).keys()].map((i) => (
-                    <option key={i} value={`${i}`}>{i} days</option>
-                  ))}
-                  <option value="custom">Custom Input</option>
-                </select>
-              </div>
-
-              {selectedOptions === "custom" && (
-                <div>
-                  <label className="block text-gray-700 font-poppins">Enter Custom Number:</label>
-                  <input
-                    type="number"
-                    value={userInput}
-                    onChange={(e) => setUserInput(e.target.value)}
-                    className="w-full bg-gray-200 border border-gray-300 text-gray-700 py-2 px-3 rounded font-poppins mt-1"
-                    placeholder="Enter a number"
-                  />
-                </div>
-              )}
-
-              <div className="flex flex-col gap-2">
-                <button
-                  onClick={handleSubmitInput}
-                  className={`w-full bg-buttoncolor text-white py-2 px-4 rounded font-poppins transition duration-200 ${
-                    !selectedOptions || (selectedOptions === "custom" && !userInput)
-                      ? "opacity-50 cursor-not-allowed"
-                      : "hover:bg-opacity-90"
-                  }`}
-                  disabled={!selectedOptions || (selectedOptions === "custom" && !userInput)}
-                >
-                  Submit
-                </button>
-                <button
-                  onClick={() => {
-                    setShowOptionPopup(false);
-                    setSelectedOptions("");
-                    setUserInput("");
-                    setIsCheckboxChecked(false);
-                  }}
-                  className="w-full bg-gray-300 text-gray-600 hover:text-gray-800 py-2 px-4 rounded font-poppins"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
-  </div>
-);
+  );
 };
 
 export default TicketDetailsModal;

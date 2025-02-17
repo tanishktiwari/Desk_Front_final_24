@@ -153,7 +153,7 @@ const Sidebar = () => {
                    flex flex-col`}
       >
         {/* Logo Section */}
-        <div className="p-4 flex justify-center items-center h-16">
+        <div className="p-4 flex justify-center items-center h-16 font-poppins">
           <Link to="/dashboard/home">
             <img
               src="../../../../../public/logo_black_full.png"
@@ -166,7 +166,7 @@ const Sidebar = () => {
         <div className="w-full border-t border-gray-200 my-4" />
 
         {/* Menu Items */}
-        <nav className="flex-1 px-4">
+        <nav className="flex-1 px-4 font-poppins">
           <ul className="space-y-4 pt-[20%]">
             {menuItems.map((item) => (
               <li key={item.id}>

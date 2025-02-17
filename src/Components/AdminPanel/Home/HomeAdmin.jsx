@@ -36,6 +36,10 @@ const HomeAdmin = () => {
   // State to hold the Monthly ETA value
   const [monthlyEta, setMonthlyEta] = useState(null);
 
+  // State for ticket counts
+  const [openTickets, setOpenTickets] = useState(0);
+  const [closedTickets, setClosedTickets] = useState(0);
+
    // Fetch Monthly ETA on component mount
  useEffect(() => {
   const fetchAdminMonthlyETA = async () => {
@@ -55,7 +59,22 @@ const HomeAdmin = () => {
   fetchAdminMonthlyETA();
 }, []);
 
+ // Fetch ticket counts on component mount
+  useEffect(() => {
+    const fetchTicketCounts = async () => {
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL}/api/tickets/count`
+        );
+        setOpenTickets(response.data.openTickets);  // Update open tickets count
+        setClosedTickets(response.data.closedTickets);  // Update closed tickets count
+      } catch (error) {
+        console.error("Error fetching ticket counts:", error);
+      }
+    };
 
+    fetchTicketCounts();
+  }, []);
 
   // Fetch the latest uploaded image URL when the page loads
   useEffect(() => {
@@ -228,13 +247,13 @@ const HomeAdmin = () => {
     },
     {
       title: " Currently Open Tickets",
-      value: "42",
+      value: openTickets,
       bgColor: "bg-green-100",
       textColor: "text-green-600",
     },
     {
       title: "Total Tickets Raised (Monthly)",
-      value: "156",
+      value: closedTickets,  // Total tickets = Open + Closed
       bgColor: "bg-purple-100",
       textColor: "text-purple-600",
     },

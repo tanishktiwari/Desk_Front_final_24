@@ -18,16 +18,19 @@ const PPMStatus = () => {
 
   const fetchOperatorData = async () => {
     try {
+      console.log("Fetching operator data for mobile:", mobileNumber);
       const response = await axios.get(
         `${import.meta.env.VITE_API_URL}/operators/mobile/${mobileNumber}`
       );
 
       if (response.data) {
-        console.log("API Response:", response.data);
+        console.log("Operator API Response:", response.data);
         const company = response.data.companyName || "";
         setCompanyName(company);
-        console.log("Company Name:", company);
-        fetchCompanyDetails(company);
+        console.log("Found Company Name:", company);
+        if (company) {
+          await fetchCompanyDetails(company);
+        }
       }
     } catch (error) {
       console.error("Error fetching operator data:", error);
@@ -36,6 +39,7 @@ const PPMStatus = () => {
 
   const fetchCompanyDetails = async (companyName) => {
     try {
+      console.log("Fetching company details for:", companyName);
       const response = await axios.get(
         `${import.meta.env.VITE_API_URL}/companies`
       );
@@ -45,9 +49,24 @@ const PPMStatus = () => {
       );
 
       if (companyDetails) {
+        console.log("Found company details:", companyDetails);
+        console.log("PPM Check data:", companyDetails.ppmCheck);
+        
+        // Set PPM frequency
         setPpmFrequency(companyDetails.ppmCheck?.frequency);
-        console.log("PPM Frequency:", companyDetails.ppmCheck?.frequency);
-        setUploadedFiles(companyDetails.ppmCheck?.pdf || []);
+        console.log("Setting PPM Frequency:", companyDetails.ppmCheck?.frequency);
+
+        // Process and normalize PDF files
+        const pdfFiles = companyDetails.ppmCheck?.pdf || [];
+        console.log("Raw PDF files:", pdfFiles);
+
+        const normalizedFiles = pdfFiles.map(file => ({
+          ...file,
+          filePath: Array.isArray(file.filePath) ? file.filePath : [file.filePath].filter(Boolean)
+        }));
+
+        console.log("Normalized files:", normalizedFiles);
+        setUploadedFiles(normalizedFiles);
       } else {
         console.log("Company not found in the companies list.");
       }
@@ -75,12 +94,21 @@ const PPMStatus = () => {
 
   const isFileUploaded = (period) => {
     console.log("Checking file for period:", period);
-    return uploadedFiles.some(
-      (file) =>
+    console.log("Current ppmFrequency:", ppmFrequency);
+    console.log("Current uploadedFiles:", uploadedFiles);
+
+    const fileExists = uploadedFiles.some(file => {
+      const matches = (
         (ppmFrequency === "monthly" && file.month === period) ||
         (ppmFrequency === "quarterly" && file.quarter === period) ||
         (ppmFrequency === "yearly" && file.year === period)
-    );
+      );
+      console.log(`File ${JSON.stringify(file)} matches period ${period}:`, matches);
+      return matches;
+    });
+
+    console.log("File exists for period?", fileExists);
+    return fileExists;
   };
 
   const getDownloadUrl = (filePath) => {
@@ -88,17 +116,36 @@ const PPMStatus = () => {
       console.error("File path is missing:", filePath);
       return "";
     }
+
+    // Handle array of file paths
+    if (Array.isArray(filePath)) {
+      if (filePath.length === 0) {
+        console.error("File path array is empty");
+        return "";
+      }
+      filePath = filePath[0];
+    }
+
+    console.log("Processing file path:", filePath);
     return `${import.meta.env.VITE_API_URL}/${filePath.replace(/\\/g, "/")}`;
   };
 
-  // Function to capitalize first letter
   const capitalizeFirstLetter = (string) => {
     return string ? string.charAt(0).toUpperCase() + string.slice(1) : '';
   };
 
+  const getFileForPeriod = (period) => {
+    const files = uploadedFiles.filter(file => 
+      (ppmFrequency === "monthly" && file.month === period) ||
+      (ppmFrequency === "quarterly" && file.quarter === period) ||
+      (ppmFrequency === "yearly" && file.year === period)
+    );
+    console.log(`Files for period ${period}:`, files);
+    return files;
+  };
+
   return (
     <div className="flex flex-col items-center min-h-screen w-full px-4 sm:px-6 lg:px-8">
-      {/* Main container with increased left padding for larger screens */}
       <div className="w-full max-w-screen-7xl mx-auto pl-0 sm:pl-4 md:pl-6 lg:pl-60">
         {/* Heading Section */}
         <div className="text-center mt-16 sm:mt-20 lg:mt-24 mb-8 sm:mb-12">
@@ -122,8 +169,8 @@ const PPMStatus = () => {
           )}
         </div>
 
-        {/* Grid Container with modified responsive behavior */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-2 gap-y-8 gap-x-8 lg:gap-x-12 ">
+        {/* Grid Container */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-2 gap-y-8 gap-x-8 lg:gap-x-12">
           {Array.from({ length: getBoxCount(ppmFrequency) }).map((_, index) => {
             const currentPeriod =
               ppmFrequency === "monthly"
@@ -131,7 +178,9 @@ const PPMStatus = () => {
                 : ppmFrequency === "quarterly"
                 ? index + 1
                 : new Date().getFullYear();
-            const currentStatus = isFileUploaded(currentPeriod) ? "Ok" : "Not Ok";
+                
+            const periodFiles = getFileForPeriod(currentPeriod);
+            const currentStatus = periodFiles.length > 0 ? "Ok" : "Not Ok";
             const { color, image } = getStatusDetails(currentStatus);
 
             return (
@@ -161,9 +210,6 @@ const PPMStatus = () => {
                       ? `Quarter: ${currentPeriod}`
                       : `Year: ${currentPeriod}`}
                   </p>
-                  <p className="font-bold text-center text-sm sm:text-base hidden">
-                    Date: <span className="font-normal">2024-01-01</span>
-                  </p>
                   <p className="font-bold text-center text-sm sm:text-base">
                     Status:{" "}
                     <span style={{ color }} className="font-normal">
@@ -174,30 +220,20 @@ const PPMStatus = () => {
 
                 {/* Footer */}
                 <div className="bg-[#f3effe] py-3 mt-auto">
-                  {isFileUploaded(currentPeriod) &&
-                    uploadedFiles
-                      .filter(
-                        (file) =>
-                          (ppmFrequency === "monthly" &&
-                            file.month === currentPeriod) ||
-                          (ppmFrequency === "quarterly" &&
-                            file.quarter === currentPeriod) ||
-                          (ppmFrequency === "yearly" &&
-                            file.year === currentPeriod)
-                      )
-                      .map((file, index) => (
-                        <a
-                          key={index}
-                          href={getDownloadUrl(file.filePath)}
-                          target="_blank"
-                          download
-                          className="block text-center"
-                        >
-                          <button className="text-blue-600 font-bold hover:underline text-sm sm:text-base">
-                            <span className="mr-2">Download Report</span>
-                          </button>
-                        </a>
-                      ))}
+                  {periodFiles.map((file, fileIndex) => (
+                    <a
+                      key={fileIndex}
+                      href={getDownloadUrl(file.filePath)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      download
+                      className="block text-center"
+                    >
+                      <button className="text-blue-600 font-bold hover:underline text-sm sm:text-base">
+                        <span className="mr-2">Download Report</span>
+                      </button>
+                    </a>
+                  ))}
                 </div>
               </div>
             );

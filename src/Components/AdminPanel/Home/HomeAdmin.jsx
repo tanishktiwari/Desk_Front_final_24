@@ -41,16 +41,24 @@ const HomeAdmin = () => {
   const [closedTickets, setClosedTickets] = useState(0);
 
    // Fetch Monthly ETA on component mount
- useEffect(() => {
+useEffect(() => {
   const fetchAdminMonthlyETA = async () => {
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_API_URL}/admin-monthly-eta`
       );
-      // Assuming the response contains totalDays which is the ETA value you want
-      const eta = response.data.totalDays; // Accessing totalDays from the response
-      setMonthlyEta(eta); // Update the state with the value of totalDays
-      console.log("Admin Monthly ETA:", eta); // Logging the received ETA value (totalDays)
+      // Log the entire response to inspect its structure
+      console.log('API Response:', response);
+
+      // Check if averageDays exists in the response
+      const averageDays = response.data?.averageDays; // Optional chaining to safely access the value
+      console.log('Admin Monthly ETA (Average Days):', averageDays);
+
+      if (averageDays !== undefined) {
+        setMonthlyEta(Math.round(averageDays)); // Round to nearest integer
+      } else {
+        console.log('Average Days data is not available');
+      }
     } catch (error) {
       console.error("Error fetching Admin Monthly ETA:", error);
     }
@@ -58,6 +66,7 @@ const HomeAdmin = () => {
 
   fetchAdminMonthlyETA();
 }, []);
+
 
  // Fetch ticket counts on component mount
   useEffect(() => {

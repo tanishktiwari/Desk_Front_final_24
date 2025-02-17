@@ -40,6 +40,42 @@ const HomeAdmin = () => {
   const [openTickets, setOpenTickets] = useState(0);
   const [closedTickets, setClosedTickets] = useState(0);
 
+  // State to hold the category-wise ticket counts
+ const [monthlyStatus, setMonthlyStatus] = useState([]);
+  const [categoryData, setCategoryData] = useState([]);
+  const fixedCategories = ["CCTV", "Access Control", "Fire Alarm", "PA System", "Other"];
+
+
+   // Fetch monthly status data
+  useEffect(() => {
+    const fetchMonthlyStatus = async () => {
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL}/tickets/monthly-status`
+        );
+        setMonthlyStatus(response.data);
+      } catch (error) {
+        console.error("Error fetching monthly status:", error);
+      }
+    };
+    fetchMonthlyStatus();
+  }, []);
+
+  // Fetch category data
+ useEffect(() => {
+    const fetchCategoryData = async () => {
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL}/tickets/categorywise`
+        );
+        setCategoryData(response.data);
+      } catch (error) {
+        console.error("Error fetching category data:", error);
+      }
+    };
+    fetchCategoryData();
+  }, []);
+
    // Fetch Monthly ETA on component mount
 useEffect(() => {
   const fetchAdminMonthlyETA = async () => {
@@ -183,28 +219,35 @@ useEffect(() => {
   };
 
   // Sample data for Bar Chart (Open vs Closed Tickets)
+ // Prepare data for Bar Chart using real data
   const barChartData = {
-    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+    labels: monthlyStatus.map(item => item.month),
     datasets: [
       {
         label: "Open Tickets",
-        data: [12, 19, 3, 5, 2, 3],
-        backgroundColor: "rgba(90, 106, 207, 1)",
+        data: monthlyStatus.map(item => item.openTickets),
+        backgroundColor: "#f48b00",
       },
       {
         label: "Closed Tickets",
-        data: [7, 11, 5, 8, 3, 6],
-        backgroundColor: "rgba(230, 232, 236, 1)",
+        data: monthlyStatus.map(item => item.closedTickets),
+        backgroundColor: "#2196f3",
       },
     ],
   };
+ 
+  // Function to get count for a category
+  const getCategoryCount = (category) => {
+    const foundCategory = categoryData.find(item => item._id === category);
+    return foundCategory ? foundCategory.count : 0;
+  };
 
-  // Sample data for Pie Chart (Category Distribution)
+  // Prepare data for Pie Chart with fixed categories
   const pieChartData = {
-    labels: ["CCTV", "Access Control", "Fire Alarm", "PA System", "Other"],
+    labels: fixedCategories,
     datasets: [
       {
-        data: [12, 19, 3, 5, 2],
+        data: fixedCategories.map(category => getCategoryCount(category)),
         backgroundColor: [
           "#f48b00", // Warm orange
           "#ff6f61", // Coral red

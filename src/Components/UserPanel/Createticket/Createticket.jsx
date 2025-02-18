@@ -613,7 +613,7 @@ const CreateTicket = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-200 py-6 flex flex-col justify-center sm:py-12 font-sans w-full ml-7 h-full">
+    <div className="min-h-screen bg-white py-6 flex flex-col justify-center sm:py-12 font-sans w-full ml-7 h-full">
       <div className="relative py-4 sm:max-w-xl sm:mx-auto">
         <div className="flex items-center justify-center min-h-screen w-[750px] -ml-[55px]">
           <div className="relative px-4 py-10 bg-gray-100 shadow rounded-3xl sm:p-10 w-[900px] h-1/2">

@@ -324,7 +324,7 @@ const Navbar = () => {
                 />
                 <div className="flex flex-col text-left">
                   <span className="text-sm font-poppins">Meet Pulkit</span>
-                  <span className="text-xs opacity-80 font-poppins">Your Account Manager</span>
+                  <span className="text-xs opacity-80 font-poppins font-normal">Your Account Manager</span>
                 </div>
               </button>
               {tooltipVisible.accountManager && (

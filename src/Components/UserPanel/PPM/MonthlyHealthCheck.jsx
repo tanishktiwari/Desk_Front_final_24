@@ -186,7 +186,7 @@ const MonthlyHealthCheck = () => {
                   alt="Health Status"
                   className="w-12 mr-2 font-poppins"
                 />
-                System PPMcheck
+                System Healthcheck
               </div>
 
               {/* Content */}

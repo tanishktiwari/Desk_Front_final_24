@@ -305,7 +305,7 @@ useEffect(() => {
     },
     {
       title: "Total Tickets Raised (Monthly)",
-      value: closedTickets,  // Total tickets = Open + Closed
+      value: closedTickets+openTickets,  // Total tickets = Open + Closed
       bgColor: "bg-purple-100",
       textColor: "text-purple-600",
     },
@@ -478,7 +478,7 @@ useEffect(() => {
 
           {/* Category Distribution */}
           <div className="bg-white p-2 sm:p-4 rounded-lg border-2 border-gray-200">
-            <div className="flex justify-center mb-2 sm:mb-4 mt-7 lg:ml-6 ">
+            <div className="flex justify-end mb-2 sm:mb-4 mt-7 lg:ml-6 ">
               <button className="w-full sm:w-40 lg:w-40 bg-custom-gradient text-white font-poppins font-light py-2 lg:py-3 rounded-xl shadow-md text-xs sm:text-sm">
                 Category Distribution
               </button>
@@ -566,10 +566,10 @@ useEffect(() => {
           <div className="bg-white p-2 sm:p-4 rounded-lg border-2 border-gray-200 font-poppins">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 sm:mb-4">
               <h3 className="text-base sm:text-lg font-medium text-gray-700 font-poppins mb-2 sm:mb-0">
-                <strong>Open vs Close Ticket</strong>
+               
               </h3>
-              <button className="w-full sm:w-28 lg:w-36 bg-custom-gradient text-white font-poppins font-light py-2 lg:py-3 rounded-xl shadow-md text-xs sm:text-sm">
-                View Report
+              <button className="w-full sm:w-28 lg:w-40 bg-custom-gradient text-white font-poppins font-light py-2 lg:py-3 rounded-xl shadow-md text-xs sm:text-sm">
+                Open vs Close Ticket
               </button>
             </div>
             <div className="h-[250px] sm:h-[300px]">

@@ -23,6 +23,15 @@ const TicketDetailsModal = ({ isOpen, onClose, ticket }) => {
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const [ticketDetails, setTicketDetails] = useState(null);
 
+
+  // Handle close button validation
+  const handleClose = () => {
+    if(engineerId === '') {
+      alert("Please select an engineer before closing.");
+      return;
+    }
+    onClose();
+  };
   // Handler for checkbox change
   const handleCheckboxChange = (e) => {
     setIsCheckboxChecked(e.target.checked);
@@ -468,7 +477,7 @@ const TicketDetailsModal = ({ isOpen, onClose, ticket }) => {
           <button
             type="button"
             className="text-gray-600 bg-none h-12 w-12 text-4xl hover:text-gray-900 absolute top-0 right-0 mt-0 mr-4 font-poppins"
-            onClick={onClose}
+            onClick={handleClose}
           >
             &times;
           </button>

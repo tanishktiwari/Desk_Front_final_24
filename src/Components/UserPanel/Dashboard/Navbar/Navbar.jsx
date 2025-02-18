@@ -81,22 +81,7 @@ const Navbar = () => {
   };
 
   //To close manager pop-up
-  useEffect(() => {
-    // Function to handle clicks outside the modal
-    const handleClickOutside = (event) => {
-      if (cardRef.current && !cardRef.current.contains(event.target)) {
-        setIsCardVisible(false); // Close the modal if click is outside
-      }
-    };
 
-    // Add event listener on component mount
-    document.addEventListener("mousedown", handleClickOutside);
-
-    // Cleanup the event listener when component unmounts
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []); // Empty dependency array ensures it runs once when the component mounts
 
   useEffect(() => {
     const fetchOperatorData = async () => {
@@ -294,6 +279,12 @@ const Navbar = () => {
   };
 
    const accountManagerButtonRef = useRef(null);
+   const handleOverlayClick = (e) => {
+    // Only close if clicking the overlay background
+    if (e.target === e.currentTarget) {
+      setIsCardVisible(false);
+    }
+  };
   return (
     <nav className="bg-white w-full fixed top-0 left-0 z-50 shadow-md">
       <div className="mx-auto max-w-8xl px-4 sm:px-6 lg:px-8">
@@ -345,7 +336,7 @@ const Navbar = () => {
               {isCardVisible && (
                 <div className="fixed inset-0 md:absolute md:inset-auto md:top-full md:right-0 md:mt-2 z-50">
                   {/* Overlay only shown on mobile */}
-                  <div className="fixed inset-0 bg-black bg-opacity-50 md:hidden" onClick={toggleCardVisibility} />
+                  <div className="fixed inset-0 bg-black bg-opacity-50 md:hidden" onClick={handleOverlayClick} />
                   
                   {/* Card Content */}
                   <div 
@@ -354,7 +345,7 @@ const Navbar = () => {
                   >
                     {/* Rest of the card content remains the same */}
                     <button
-                      onClick={toggleCardVisibility}
+                      onClick={() => setIsCardVisible(false)}
                       className="absolute top-1 right-2 text-gray-400 hover:text-white"
                     >
                       &times;
@@ -370,46 +361,54 @@ const Navbar = () => {
                       the last 45 days.
                     </p>
                     {/* Contact Information */}
-                    <div className="mt-4">
-                      <div className="flex items-center gap-2 font-poppins">
-                        <img src="/email_2.png" alt="" className="h-4 w-4" />
-                        <span className="text-[13px]">
-                          pulkit.verma@foxnetglobal.com
-                        </span>
-                        <button
-                          onClick={() =>
-                            copyToClipboard(
-                              "pulkit.verma@foxnetglobal.com",
-                              "email"
-                            )
-                          }
-                          className="ml-0 text-gray-400 hover:text-white"
-                        >
-                          <img
-                            src={isEmailCopied ? "/copy_green.png" : "/copy.png"}
-                            alt="Copy Icon"
-                            className="h-3 w-3 mb-1"
-                          />
-                        </button>
-                      </div>
+                   <div className="mt-4">
+  {/* Email Section */}
+  <div className="flex items-center gap-2 font-poppins">
+    <img src="/email_2.png" alt="" className="h-4 w-4" />
+    <span className="text-[13px]">pulkit.verma@foxnetglobal.com</span>
+    <button
+      onClick={() => {
+        copyToClipboard("pulkit.verma@foxnetglobal.com", "email");
+        setIsEmailCopied(true);
+        setTimeout(() => setIsEmailCopied(false), 500);
+      }}
+      className="ml-0 text-gray-400 hover:text-white"
+    >
+      <img
+        src={isEmailCopied ? "/copy_green.png" : "/copy.png"}
+        alt="Copy Icon"
+        className="h-3 w-3 mb-1"
+      />
+    </button>
+    {isEmailCopied && (
+      <span className="text-green-500 text-sm font-poppins">Copied!</span>
+    )}
+  </div>
 
-                      <div className="flex items-center gap-2 mt-2 font-poppins">
-                        <img src="/phone-call.png" alt="" className="h-4 w-4" />
-                        <span className="text-sm">+91 9560005265</span>
-                        <button
-                          onClick={() =>
-                            copyToClipboard("+91 9560005265", "phone")
-                          }
-                          className="ml-0 text-gray-400 hover:text-white"
-                        >
-                          <img
-                            src={isPhoneCopied ? "/copy_green.png" : "/copy.png"}
-                            alt=""
-                            className="h-3 w-3 mb-1"
-                          />
-                        </button>
-                      </div>
-                    </div>
+  {/* Phone Section */}
+  <div className="flex items-center gap-2 mt-2 font-poppins">
+    <img src="/phone-call.png" alt="" className="h-4 w-4" />
+    <span className="text-sm">+91 9560005265</span>
+    <button
+      onClick={() => {
+        copyToClipboard("+91 9560005265", "phone");
+        setIsPhoneCopied(true);
+        setTimeout(() => setIsPhoneCopied(false), 500);
+      }}
+      className="ml-0 text-gray-400 hover:text-white"
+    >
+      <img
+        src={isPhoneCopied ? "/copy_green.png" : "/copy.png"}
+        alt=""
+        className="h-3 w-3 mb-1"
+      />
+    </button>
+    {isPhoneCopied && (
+      <span className="text-green-500 text-sm font-poppins">Copied!</span>
+    )}
+  </div>
+</div>
+
                     {/* Action Buttons */}
                     <div className="mt-4 flex gap-0 ml-0">
                       <div className="flex-1">

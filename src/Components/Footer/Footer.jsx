@@ -19,10 +19,11 @@ const Footer = () => {
         isCollapsed ? "pl-0" : "lg:pl-60"
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col lg:flex-row lg:justify-center gap-8">
-          {/* Left Section - Significantly increased left padding */}
-          <div className="flex flex-col items-center lg:items-start space-y-6 lg:w-1/2 lg:pl-[25%] 2xl:pl-[17%] xl:pl-0">
+      <div className="w-full mx-auto px-4 sm:px-6 md:px-10 lg:px-16 2xl:px-20 2xl:pr-10 xl:px-[10%] xl:pr-[0%]">
+        <div className="flex flex-col md:flex-row justify-between">
+          {/* Left Section - kept as it is */}
+          <div className="flex flex-col items-center md:items-start space-y-6 
+            sm:pl-2 md:pl-4 lg:pl-[15rem] 2xl:pl-[13rem] xl:pl-10">
             {/* Logo */}
             <div
               className="relative w-[200px] h-[120px]"
@@ -36,14 +37,14 @@ const Footer = () => {
               />
             </div>
 
-            {/* Description - Added larger max-width */}
-            <p className="text-center lg:text-left lg:max-w-3xl">
+            {/* Description */}
+            <p className="text-center md:text-left max-w-md !mt-0">
               The end-to-end analytics service for the site, designed
               to work with enterprises of various levels and business segments.
             </p>
 
             {/* Social Media Icons */}
-            <div className="flex flex-wrap justify-center lg:justify-start gap-4">
+            <div className="flex flex-wrap justify-center md:justify-start gap-4">
               {[
                 { src: "/linkedin.png", alt: "LinkedIn" },
                 { src: "/instagram.png", alt: "Instagram" },
@@ -68,10 +69,10 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Right Section */}
-          <div className="flex flex-col items-center lg:items-end space-y-8 lg:w-1/2 pt-10 ">
+          {/* Right Section - Modified to align to the end of the screen */}
+          <div className="flex flex-col items-center md:items-end space-y-8 pt-10 md:pt-10">
             {/* Navigation Links */}
-            <nav className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8">
+            <nav className="flex flex-col sm:flex-row items-center md:items-end gap-4 sm:gap-8">
               {[
                 { text: "Privacy Policy", route: "/dashboard/PrivacyPolicyPage" },
                 { text: "Terms of Service", route: "/dashboard/TermsOfService" },
@@ -88,16 +89,16 @@ const Footer = () => {
             </nav>
 
             {/* Contact Information */}
-            <div className="flex flex-col items-center lg:items-end space-y-6">
-              <div className="text-center lg:text-right">
+            <div className="flex flex-col items-center md:items-end space-y-6">
+              <div className="text-center md:text-right">
                 <h4 className="text-white font-bold mb-2">Contact Us</h4>
                 <p>+91 90948 94948</p>
                 <p>care@deskassure.com</p>
               </div>
 
-              <div className="text-center lg:text-right">
+              <div className="text-center md:text-right">
                 <h4 className="text-white font-bold mb-2">Location</h4>
-                <div className="flex flex-wrap justify-center lg:justify-end gap-4">
+                <div className="flex flex-wrap justify-center md:justify-end gap-4">
                   <p>New Delhi</p>
                   <p>Bangalore</p>
                   <p>Pune</p>

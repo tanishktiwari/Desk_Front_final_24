@@ -41,7 +41,7 @@ const Home = () => {
     exceeds24HoursCount: 0,
     ticketsProcessed: 0,
   });
-
+  const [openTicketsCount, setOpenTicketsCount] = useState(0);
   const miscellaneousCards = [
     {
       title: "Support Inventory",
@@ -149,12 +149,12 @@ const Home = () => {
       {
         label: "Open Tickets",
         data: chartData.open,
-        backgroundColor: "rgba(90, 106, 207, 1)",
+        backgroundColor: "#f48b00",
       },
       {
         label: "Closed Tickets",
         data: chartData.closed,
-        backgroundColor: "rgba(230, 232, 236, 1)",
+        backgroundColor: "#2196f3",
       },
     ],
   };
@@ -164,6 +164,11 @@ const Home = () => {
     if (mobileNumber) {
       const fetchData = async () => {
         try {
+          // Fetch open tickets count
+          const openTicketsResponse = await axios.get(
+            `${import.meta.env.VITE_API_URL}/tickets/mobile/${mobileNumber}`
+          );
+          setOpenTicketsCount(openTicketsResponse.data.length);
           // Fetch Monthly ETA data
           const etaResponse = await axios.get(
             `${import.meta.env.VITE_API_URL}/user-monthly-eta/${mobileNumber}`
@@ -206,6 +211,8 @@ const Home = () => {
     }
   }, [images.length]);
   // Sample data for Metrics Cards
+
+  
   const metricsData = [
     {
       title: "Monthly ETA",
@@ -217,13 +224,13 @@ const Home = () => {
     },
     {
       title: "Open Tickets",
-      value: chartData.open.reduce((a, b) => a + b, 0).toString(),
+      value: openTicketsCount.toString(),
       bgColor: "bg-green-100",
       textColor: "text-green-600",
     },
     {
       title: "Total Tickets Raised (Monthly)",
-      value: chartData.closed.reduce((a, b) => a + b, 0).toString(),
+      value: (openTicketsCount + chartData.closed.reduce((a, b) => a + b, 0)).toString(),
       bgColor: "bg-purple-100",
       textColor: "text-purple-600",
     },
@@ -298,7 +305,7 @@ const Home = () => {
 
           {/* Category Distribution */}
           <div className="bg-white p-2 sm:p-4 rounded-lg border-2 border-gray-200">
-            <div className="flex justify-center mb-2 sm:mb-4 mt-7 lg:ml-6">
+            <div className="flex justify-end mb-2 sm:mb-4 mt-7 lg:ml-6">
               <button className="w-full sm:w-40 lg:w-40 bg-custom-gradient text-white font-poppins font-light py-2 lg:py-3 rounded-xl shadow-md text-xs sm:text-sm">
                 Category Distribution
               </button>
@@ -386,10 +393,10 @@ const Home = () => {
           <div className="bg-white p-2 sm:p-4 rounded-lg border-2 border-gray-200 font-poppins">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 sm:mb-4">
               <h3 className="text-base sm:text-lg font-medium text-gray-700 font-poppins mb-2 sm:mb-0">
-                <strong>Open vs Close Ticket</strong>
+                {/* <strong>Open vs Close Ticket</strong> */}
               </h3>
-              <button className="w-full sm:w-28 lg:w-36 bg-custom-gradient text-white font-poppins font-light py-2 lg:py-3 rounded-xl shadow-md text-xs sm:text-sm">
-                View Report
+              <button className="w-full sm:w-28 lg:w-40 bg-custom-gradient text-white font-poppins font-light py-2 lg:py-3 rounded-xl shadow-md text-xs sm:text-sm">
+                Open vs Close Ticket
               </button>
             </div>
             <div className="h-[250px] sm:h-[300px]">

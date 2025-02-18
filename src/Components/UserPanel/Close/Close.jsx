@@ -28,6 +28,26 @@ const Close = () => {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [selectedEta, setSelectedEta] = useState("all");
+  const [uniqueNames, setUniqueNames] = useState([]);
+  const [uniqueCompanyNames, setUniqueCompanyNames] = useState([]);
+  const [uniqueIssueCategories, setUniqueIssueCategories] = useState([]);
+    const [uniqueStatuses, setUniqueStatuses] = useState([]);
+
+  const [filterCriteria, setFilterCriteria] = useState({
+  ticketNo: "",
+  name: "",
+  companyName: "",
+  issueCategory: "",
+  date: "",
+  time: "",
+  status: "",
+  etaMin: "",
+  etaMax: "",
+});
+
+const [selectedCategories, setSelectedCategories] = useState([]);
+const [dateRange, setDateRange] = useState({ from: "", to: "" });
+const [showFilterMenu, setShowFilterMenu] = useState(false);
   
 
   // Change the state variable name from filteredTickets to displayedTickets
@@ -56,45 +76,110 @@ const [isFilterPopupVisible, setIsFilterPopupVisible] = useState(false); // To t
     fetchTickets();
   }, []);
   // Apply filters to the tickets
-  const applyFilters = (newFilters) => {
-  setFilters(newFilters);  // Update filters
+ const applyFilters = () => {
+  let filteredResults = [...tickets];
 
-  let filteredTickets = [...tickets]; // Copy original tickets
-
-  // Apply category filter
-  if (newFilters.category !== "all") {
-    filteredTickets = filteredTickets.filter(
-      (ticket) => ticket.issueCategory === newFilters.category
+  // Apply filters for each field
+  if (filterCriteria.ticketNo) {
+    filteredResults = filteredResults.filter((ticket) =>
+      ticket.ticketNo
+        ?.toString()
+        .toLowerCase()
+        .includes(filterCriteria.ticketNo.toLowerCase())
     );
   }
 
-  // Apply date range filter (fromDate and toDate)
-  if (newFilters.fromDate && newFilters.toDate) {
-    filteredTickets = filteredTickets.filter((ticket) => {
-      const ticketDate = new Date(ticket.createdDate);
-      const start = new Date(newFilters.fromDate);
-      const end = new Date(newFilters.toDate);
-      return ticketDate >= start && ticketDate <= end;
-    });
+  if (filterCriteria.name) {
+    filteredResults = filteredResults.filter((ticket) =>
+      ticket.name?.toLowerCase().includes(filterCriteria.name.toLowerCase())
+    );
   }
 
-  // Apply ETA filter
-  if (newFilters.selectedEta !== "all") {
-    const etaMapping = {
-      "0-2": 2,
-      "2-4": 4,
-      "4+": Infinity,
-    };
-    const [minEta, maxEta] = newFilters.selectedEta.split("-").map(Number);
-    filteredTickets = filteredTickets.filter((ticket) => {
-      const etaDays = ticket.eta || 0;
-      return etaDays >= minEta && etaDays <= maxEta;
-    });
+  if (filterCriteria.companyName) {
+    filteredResults = filteredResults.filter((ticket) =>
+      ticket.companyName
+        ?.toLowerCase()
+        .includes(filterCriteria.companyName.toLowerCase())
+    );
   }
 
-  // Update displayed tickets with the filtered tickets
-  setDisplayedTickets(filteredTickets);
-};
+  // Updated multiple category filtering
+  if (selectedCategories.length > 0) {
+    filteredResults = filteredResults.filter((ticket) =>
+      selectedCategories.includes(ticket.issueCategory)
+    );
+  }
+
+  // ETA filtering
+  if (filterCriteria.etaMin) {
+    filteredResults = filteredResults.filter(
+      (ticket) => ticket.eta >= parseInt(filterCriteria.etaMin)
+    );
+  }
+  if (filterCriteria.etaMax) {
+    filteredResults = filteredResults.filter(
+      (ticket) => ticket.eta <= parseInt(filterCriteria.etaMax)
+    );
+  }
+
+  // Date range filtering
+  if (dateRange.from || dateRange.to) {
+      filteredResults = filteredResults.filter((ticket) => {
+        // Parse the ticket's createdDate
+        const ticketDate = new Date(ticket.createdDate);
+        
+        // Convert date strings to Date objects
+        const fromDate = dateRange.from ? new Date(dateRange.from) : null;
+        const toDate = dateRange.to ? new Date(dateRange.to) : null;
+
+        // Add one day to toDate to include the end date in results
+        if (toDate) {
+          toDate.setDate(toDate.getDate() + 1);
+        }
+
+        // Reset time portions for accurate date comparison
+        if (ticketDate) ticketDate.setHours(0, 0, 0, 0);
+        if (fromDate) fromDate.setHours(0, 0, 0, 0);
+        if (toDate) toDate.setHours(0, 0, 0, 0);
+
+        // Debug logs to help identify issues
+        console.log('Ticket Date:', ticketDate);
+        console.log('From Date:', fromDate);
+        console.log('To Date:', toDate);
+
+        // Perform the date range check
+        if (fromDate && toDate) {
+          return ticketDate >= fromDate && ticketDate < toDate;
+        } else if (fromDate) {
+          return ticketDate >= fromDate;
+        } else if (toDate) {
+          return ticketDate < toDate;
+        }
+        return true;
+      });
+    }
+
+  // Apply search query if present
+  if (searchQuery) {
+      filteredResults = filteredResults.filter((ticket) => {
+        const searchableFields = {
+          ticketNo: ticket.ticketNo?.toString().toLowerCase() || "",
+          name: ticket.name?.toLowerCase() || "",
+          companyName: ticket.companyName?.toLowerCase() || "",
+          issueCategory: ticket.issueCategory?.toLowerCase() || "",
+          date: ticket.date ? formatDate(new Date(ticket.date)) : "",
+          time: ticket.time?.toLowerCase() || "",
+          status: ticket.status?.toLowerCase() || "",
+        };
+
+        return Object.values(searchableFields).some((value) =>
+          value.toString().toLowerCase().includes(searchQuery.toLowerCase())
+        );
+      });
+    }
+
+    setDisplayedTickets(filteredResults);
+  };
 
 
 
@@ -116,7 +201,7 @@ const copyToClipboard = (text) => {
         // Reset copied state after 2 seconds
         setTimeout(() => {
           setCopiedTicketNos((prev) => ({ ...prev, [text]: false }));
-        }, 2000);
+        }, 500);
 
         console.log("Text copied successfully");
         // alert("Ticket number copied to clipboard!"); // Optionally show feedback to the user
@@ -142,7 +227,7 @@ const copyToClipboard = (text) => {
         // Reset copied state after 2 seconds
         setTimeout(() => {
           setCopiedTicketNos((prev) => ({ ...prev, [text]: false }));
-        }, 2000);
+        }, 500);
 
         console.log("Text copied successfully using execCommand");
         // alert("Ticket number copied to clipboard!");
@@ -278,10 +363,7 @@ useEffect(() => {
     setIsSearchBoxVisible(!isSearchBoxVisible);
   };
 
-  // const handleSearch = (event) => {
-  //   setSearchQuery(event.target.value);
-  //   setCurrentPage(1);
-  // };
+
   //New date formate 
   const formdate = (date) => {
   return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
@@ -456,6 +538,54 @@ console.log('Total Days to display:', totalDays);
     };
   }, [isSearchBoxVisible]);
   
+  const toggleFilterMenu = () => {
+  setShowFilterMenu(!showFilterMenu);
+};
+useEffect(() => {
+  applyFilters();
+}, [filterCriteria, searchQuery, selectedCategories, dateRange]);
+useEffect(() => {
+  if (tickets.length > 0) {
+    const categories = [
+      ...new Set(tickets.map((ticket) => ticket.issueCategory).filter(Boolean)),
+    ];
+    setUniqueIssueCategories(categories);
+
+    const names = [
+      ...new Set(tickets.map((ticket) => ticket.name).filter(Boolean)),
+    ];
+    setUniqueNames(names);
+
+    const companies = [
+      ...new Set(tickets.map((ticket) => ticket.companyName).filter(Boolean)),
+    ];
+    setUniqueCompanyNames(companies);
+  }
+}, [tickets]);
+const resetFilters = () => {
+  setFilterCriteria({
+    ticketNo: "",
+    name: "",
+    companyName: "",
+    issueCategory: "",
+    date: "",
+    time: "",
+    status: "",
+    etaMin: "",
+    etaMax: "",
+  });
+  setSelectedCategories([]);
+  setDateRange({ from: "", to: "" });
+  setDisplayedTickets(tickets);
+};
+// Advanced filtering
+  const handleFilterChange = (field, value) => {
+    setFilterCriteria((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+    setCurrentPage(1);
+  };
   
   return (
     <div className="flex flex-col mt-20 ml-32 h-full w-[88%] xl:pl-[10%] 2xl:pl-[10%] lg:pl-[15%]">
@@ -464,7 +594,6 @@ console.log('Total Days to display:', totalDays);
           <span
             className="mt-2 font-poppins"
             style={{
-              // fontFamily: "Roboto",
               fontSize: "18px",
               fontWeight: "400",
               lineHeight: "28px",
@@ -473,7 +602,19 @@ console.log('Total Days to display:', totalDays);
           >
             All ({totalEntries})
           </span>
-          {/* <img src="/arrow.png" alt="Arrow" className="ml-0 h-8 w-8 mt-2" /> */}
+        </div>
+        <div className="flex items-center mb-4">
+          <span
+            className="mt-2 font-poppins"
+            style={{
+              fontSize: "18px",
+              fontWeight: "800",
+              lineHeight: "40px",
+              color: "#343A40",
+            }}
+          >
+            Close Tickets
+          </span>
         </div>
 
         <div className="flex flex-row gap-3 mr-3">
@@ -495,19 +636,205 @@ console.log('Total Days to display:', totalDays);
               />
             )}
           </div>
-          <img src="/setting.png" alt="Setting Icon" className="h-7 w-7" />
+         
           <img
             src="/filter.png"
             alt="Filter Icon"
             className="h-7 w-7 cursor-pointer"
-            onClick={() => setIsFilterPopupVisible(true)}
+            onClick={toggleFilterMenu}
           />
-        {isFilterPopupVisible && (
-  <FilterPopup
-    closePopup={() => setIsFilterPopupVisible(false)} // Close the filter popup
-    onApplyFilters={applyFilters}  // Apply the filters
-    currentFilters={filters}  // Pass the current filters to the popup
-  />
+        {showFilterMenu && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="bg-white rounded-lg shadow-lg w-96 p-6">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6 relative">
+        <img src="/image_black.png" alt="Filter" className="w-10 h-10" />
+        <h2 className="text-xl font-poppins absolute left-1/2 transform -translate-x-1/2">
+          Filters
+        </h2>
+        <button
+          onClick={() => setShowFilterMenu(false)}
+          className="text-gray-500 hover:text-gray-700 font-bold text-2xl -mt-[8%]"
+        >
+          ×
+        </button>
+      </div>
+
+      {/* Issue Category */}
+      <div className="mb-6">
+        <label className="block text-xs font-semibold mb-2 font-poppins">
+          Issue Category:
+        </label>
+        <select
+          className="w-full p-2 border font-poppins text-xs"
+          onChange={(e) => {
+            if (
+              e.target.value &&
+              !selectedCategories.includes(e.target.value)
+            ) {
+              setSelectedCategories([...selectedCategories, e.target.value]);
+            }
+          }}
+          value=""
+        >
+          <option value="">Select Category</option>
+          {uniqueIssueCategories.map((category) => (
+            <option key={category} value={category}>
+              {category}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Name Filter */}
+      {/* <div className="mb-6">
+        <label className="block text-xs font-semibold mb-2 font-poppins">
+          Name:
+        </label>
+        <select
+          value={filterCriteria.name}
+          onChange={(e) => handleFilterChange("name", e.target.value)}
+          className="w-full p-2 border font-poppins text-xs"
+        >
+          <option value="">All Names</option>
+          {uniqueNames.map((name) => (
+            <option key={name} value={name}>
+              {name}
+            </option>
+          ))}
+        </select>
+      </div> */}
+
+      {/* Company Name Filter */}
+      {/* <div className="mb-6">
+        <label className="block text-xs font-semibold mb-2 font-poppins">
+          Company Name:
+        </label>
+        <select
+          value={filterCriteria.companyName}
+          onChange={(e) =>
+            handleFilterChange("companyName", e.target.value)
+          }
+          className="w-full p-2 border font-poppins text-xs"
+        >
+          <option value="">All Companies</option>
+          {uniqueCompanyNames.map((company) => (
+            <option key={company} value={company}>
+              {company}
+            </option>
+          ))}
+        </select>
+      </div> */}
+
+      {/* Date Range Picker */}
+      <div className="mb-6">
+        <label className="block text-xs font-semibold mb-2 font-poppins">
+          Choose a Date Range:
+        </label>
+        <div className="grid grid-cols-2 gap-2">
+          <input
+            type="date"
+            value={dateRange.from}
+            onChange={(e) => {
+              setDateRange({ ...dateRange, from: e.target.value });
+            }}
+            className="w-full p-2 border font-poppins text-xs"
+            placeholder="Start date"
+          />
+          {dateRange.from && (
+            <input
+              type="date"
+              value={dateRange.to}
+              onChange={(e) => {
+                setDateRange({ ...dateRange, to: e.target.value });
+              }}
+              min={dateRange.from}
+              className="w-full p-2 border rounded-md font-poppins text-xs"
+              placeholder="End date"
+            />
+          )}
+        </div>
+      </div>
+
+      {/* ETA Range Picker */}
+      <div className="mb-6">
+        <label className="block text-xs font-semibold mb-2 font-poppins">
+          ETA (Days) Range:
+        </label>
+        <div className="grid grid-cols-2 gap-2">
+          <input
+            type="number"
+            min="0"
+            placeholder="Min days"
+            value={filterCriteria.etaMin || ""}
+            onChange={(e) => handleFilterChange("etaMin", e.target.value)}
+            className="w-full p-2 border font-poppins text-xs"
+          />
+          <input
+            type="number"
+            min="0"
+            placeholder="Max days"
+            value={filterCriteria.etaMax || ""}
+            onChange={(e) => handleFilterChange("etaMax", e.target.value)}
+            className="w-full p-2 border font-poppins text-xs"
+          />
+        </div>
+      </div>
+
+      {/* Selected Categories */}
+      {selectedCategories.length > 0 && (
+        <div className="mb-6">
+          <div className="flex flex-wrap gap-2">
+            {selectedCategories.map((category) => (
+              <span
+                key={category}
+                className="bg-gray-100 px-3 py-1 rounded-full flex items-center gap-2 font-poppins text-[10px]"
+              >
+                {category}
+                <button
+                  onClick={() =>
+                    setSelectedCategories(
+                      selectedCategories.filter((cat) => cat !== category)
+                    )
+                  }
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Buttons */}
+      <div className="flex justify-center gap-2">
+        <button
+          onClick={() => {
+            setSelectedCategories([]);
+            setDateRange({ from: "", to: "" });
+            resetFilters();
+          }}
+          className="px-[0.3rem] py-[0.3rem] text-white border bg-gray-600 font-poppins text-xs"
+        >
+          Reset
+        </button>
+        <button
+          onClick={() => {
+            handleFilterChange(
+              "issueCategory",
+              selectedCategories.join(",")
+            );
+            handleFilterChange("date", dateRange.from ? dateRange.from : "");
+            setShowFilterMenu(false);
+          }}
+          className="px-[0.3rem] py-[0.3rem] bg-buttoncolor text-white font-poppins text-xs"
+        >
+          Apply
+        </button>
+      </div>
+    </div>
+  </div>
 )}
 
         </div>
@@ -606,6 +933,11 @@ console.log('Total Days to display:', totalDays);
                                   className="h-full w-full object-contain"
                                 />
                               </button>
+                              {copiedTicketNos[ticket.ticketNo] && (
+                                  <span className="text-green-500 text-sm font-poppins">
+                                    Copied!
+                                  </span>
+                                )}
                             </div>
                           </td>
                           <td className="whitespace-nowrap px-2 py-2 font-poppins text-neutral-900 text-center">
@@ -685,9 +1017,8 @@ console.log('Total Days to display:', totalDays);
                     ticketNumber={selectedTicketId}
                   />
                 )}
-                <div className="flex justify-between items-center mt-4">
-                  
-                  <div className="font-poppins">
+                <div className="flex justify-between items-center mt-4 ">
+                  <div className="font-poppins font-light">
                     <span className="mr-2">Showing</span>
                     {/* Rows per page dropdown */}
                     <select
@@ -697,35 +1028,32 @@ console.log('Total Days to display:', totalDays);
                       <option value={10}>10</option>
                       <option value={25}>25</option>
                       <option value={50}>50</option>
-                      
                     </select>
                     <span className="ml-2">rows per page</span>
                   </div>
                   <div>
-                    <span className="font-poppins">
+                    <span className="font-poppins font-light">
                       Showing {currentPage} of {totalPages} pages
                     </span>
                   </div>
                   <div className="flex items-center ml-20 gap-3">
                     <div className=" w-[30px] h-[30px] flex items-center justify-center">
-                      <img
-                        src="/previous.png"
-                        alt="Left Arrow"
-                        className="cursor-pointer h-[30px]"
+                      <button
+                        className="px-3 md:px-4 py-1 md:py-2 border rounded-md"
                         onClick={() =>
                           currentPage > 1 && paginate(currentPage - 1)
                         }
-                      />
+                      >
+                        &lt;
+                      </button>
                     </div>
                     <div className="flex gap-1">
                       {Array.from({ length: totalPages }, (_, index) => (
                         <button
                           key={index + 1}
                           onClick={() => paginate(index + 1)}
-                          className={`w-[30px] h-[30px] rounded-l-[2px] cursor-pointer ${
+                          className={`px-3 md:px-4 py-1 md:py-2 border rounded-md bg-buttoncolor text-white ${
                             currentPage === index + 1
-                              ? "bg-[#DC3545] text-white"
-                              : "bg-[#DFDFDF]"
                           }`}
                         >
                           {index + 1}
@@ -733,14 +1061,14 @@ console.log('Total Days to display:', totalDays);
                       ))}
                     </div>
                     <div className=" w-[30px] h-[30px] flex items-center justify-center">
-                      <img
-                        src="/next.png"
-                        alt="Right Arrow"
-                        className="cursor-pointer h-[30px]"
+                      <button
+                        className="px-3 md:px-4 py-1 md:py-2 border rounded-md"
                         onClick={() =>
                           currentPage < totalPages && paginate(currentPage + 1)
                         }
-                      />
+                      >
+                        &gt;
+                      </button>
                     </div>
                   </div>
                 </div>

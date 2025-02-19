@@ -627,7 +627,7 @@ const CloseticketAdmin = () => {
             {isSearchBoxVisible && (
               <input
                 type="text"
-                placeholder="Search..."
+                placeholder="Enter Ticket Number or keyword"
                 value={searchQuery}
                 onChange={handleSearch}
                 className="border rounded px-2 py-1 search-input font-poppins"

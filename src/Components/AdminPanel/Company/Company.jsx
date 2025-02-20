@@ -368,55 +368,30 @@ const addNewUserDetail = () => {
   );
 };
 
+const [companiesWithTicketsCount, setCompaniesWithTicketsCount] = useState(0);
+useEffect(() => {
+  const fetchCompaniesWithTickets = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/companies-with-tickets`);
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      const data = await response.json();
+      setCompaniesWithTicketsCount(data.data.length); // Set the count of companies with tickets
+    } catch (error) {
+      console.error("Error fetching companies with tickets:", error);
+    }
+  };
+
+  fetchCompaniesWithTickets();
+}, []);
 
 
   return (
     <div className="flex flex-col mt-20 ml-32 h-full w-[88%] xl:pl-[10%] 2xl:pl-[10%] lg:pl-[15%] font-poppins">
       {/* Statistics section */}
-      <div className="flex justify-between items-center bg-white p-6 shadow-md rounded-md mb-6">
-        <div className="flex items-center">
-          <img
-            src="/Group_10.png"
-            alt="Operator Icon"
-            className="mr-4 h-16 w-16"
-          />
-          <div className="flex flex-col items-start">
-            <div className="text-4xl font-semibold text-green-600 font-poppins">
-              {totalEntries}
-            </div>
-            <div className="text-gray-500">Total Company</div>
-          </div>
-        </div>
-        <div className="flex items-center">
-          <img
-            src="/Group_11.png"
-            alt="Company Icon"
-            className="mr-4 h-16 w-16"
-          />
-          <div className="flex flex-col items-start">
-            <div className="text-4xl font-semibold text-gray-800 font-poppins">
-              {totalEntries}
-            </div>
-            <div className="text-gray-500">Companies</div>
-          </div>
-        </div>
-        <div className="flex items-center">
-          <img
-            src="/Group_12.png"
-            alt="Ticket Icon"
-            className="mr-4 h-16 w-16"
-          />
-          <div className="flex flex-col items-start">
-            <div className="text-4xl font-semibold text-green-600 font-poppins">{activeTickets}</div>
-            <div className="text-gray-500">Active Tickets</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Table */}
-      <div className="bg-white p-6 shadow-md rounded-md">
-        {/* Header and Search */}
-        <div className="bg-white p-6 shadow-md rounded-md mb-6">
+      
+      <div className="bg-white p-6 shadow-md rounded-md mb-6">
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-semibold">Company Details</h2>
             <div className="flex items-center gap-4">
@@ -436,10 +411,10 @@ const addNewUserDetail = () => {
                 />
               )}
               <button
-                className="bg-buttoncolor text-white px-4 py-2 rounded-md"
+                className="bg-buttoncolor text-white px-4 py-2"
                 onClick={handleAddClick}
               >
-                ADD Company
+                Add Company
               </button>
             </div>
           </div>
@@ -605,6 +580,48 @@ const addNewUserDetail = () => {
             </div>
           )}
         </div>
+      {/* Table */}
+      <div className="bg-white p-6 shadow-md rounded-md">
+        {/* Header and Search */}
+        <div className="flex justify-between items-center bg-white p-6 shadow-md rounded-md mb-6">
+        <div className="flex items-center">
+          <img
+            src="/Group_10.png"
+            alt="Operator Icon"
+            className="mr-4 h-16 w-16"
+          />
+          <div className="flex flex-col items-start">
+            <div className="text-4xl font-semibold text-green-600 font-poppins">
+              {totalEntries}
+            </div>
+            <div className="text-gray-500">Total Company</div>
+          </div>
+        </div>
+        <div className="flex items-center">
+          <img
+            src="/Group_11.png"
+            alt="Company Icon"
+            className="mr-4 h-16 w-16"
+          />
+          <div className="flex flex-col items-start">
+            <div className="text-4xl font-semibold text-green-600 font-poppins">
+              {companiesWithTicketsCount}
+            </div>
+            <div className="text-gray-500">Active Companies</div>
+          </div>
+        </div>
+        <div className="flex items-center">
+          <img
+            src="/Group_12.png"
+            alt="Ticket Icon"
+            className="mr-4 h-16 w-16"
+          />
+          <div className="flex flex-col items-start">
+            <div className="text-4xl font-semibold text-green-600 font-poppins">{activeTickets}</div>
+            <div className="text-gray-500">Active Tickets</div>
+          </div>
+        </div>
+      </div>
 
         <table className="w-full border-collapse">
           <thead>

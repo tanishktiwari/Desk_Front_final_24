@@ -1,26 +1,60 @@
 import jsPDF from 'jspdf';
 import axios from 'axios';
 
-const formatDate = (date) => {
-    const day = String(date.getDate()).padStart(2, '0');
-    const year = date.getFullYear();
-
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const month = monthNames[date.getMonth()];
-
-    return `${day}-${month}-${year}`;
+const formatDate = (dateStr) => {
+    return dateStr;
 };
 
+const splitTextToFit = (doc, text, maxWidth) => {
+    const words = text.split(' ');
+    const lines = [];
+    let currentLine = words[0];
+    let wordCount = 1;
 
-const generateServiceTicketPDF = async (ticketNo, eta, createdDate) => {
+    // If total words exceed 40, truncate with ellipsis
+    if (words.length > 30) {
+        words.length = 30;
+        words.push('...');
+    }
+
+    for (let i = 1; i < words.length; i++) {
+        const word = words[i];
+        const width = doc.getStringUnitWidth(currentLine + ' ' + word) * doc.getFontSize() / doc.internal.scaleFactor;
+        
+        if (width < maxWidth) {
+            currentLine += ' ' + word;
+            wordCount++;
+        } else {
+            lines.push(currentLine);
+            currentLine = word;
+            wordCount++;
+        }
+    }
+    lines.push(currentLine);
+    return lines;
+};
+
+const generateServiceTicketPDF = async (ticketNo) => {
     const doc = new jsPDF();
-    const imgUrl = '/image_black.png';
-    const imgWidth = 35;
-    const imgHeight = 35;
+    const imgUrl = '/pdflogo.png';
+    const imgWidth = 50;
+    const imgHeight = 20;
 
     try {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/ticket-details/${ticketNo}`);
-        const ticket = response.data;
+        const [ticketResponse, companiesResponse] = await Promise.all([
+            axios.get(`${import.meta.env.VITE_API_URL}/ticket-details/${ticketNo}`),
+            axios.get(`${import.meta.env.VITE_API_URL}/companies`)
+        ]);
+        
+        const ticket = ticketResponse.data;
+        const companies = companiesResponse.data;
+        
+        // Find the matching company
+        const selectedCompany = companies.find(company => company.name === ticket.companyName) || {
+            name: ticket.companyName,
+            gst: '',
+            address: ''
+        };
 
         const imageResponse = await fetch(imgUrl);
         if (!imageResponse.ok) {
@@ -31,161 +65,190 @@ const generateServiceTicketPDF = async (ticketNo, eta, createdDate) => {
 
         reader.onloadend = () => {
             const imgData = reader.result;
-            doc.addImage(imgData, 'PNG', 10, 4, imgWidth, imgHeight, undefined, 'FAST');
+            
+            // Add logo to the top right
+            doc.addImage(imgData, 'PNG', 160, 4, imgWidth, imgHeight, undefined, 'FAST');
 
+            // Header Section
             doc.setFontSize(20);
             doc.setFont('helvetica', 'bold');
-            doc.setTextColor(0, 0, 0);
-            doc.text('Service Ticket', 140, 20);
+            doc.text('Service Ticket', 10, 20);
 
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'normal');
-            doc.text(`#${ticket.ticketId || ''}`, 140, 30); // Fallback value
-
-            // Ticket Owner Details
+            // Ticket Details
             doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
-            doc.text('Ticket Owner:', 10, 50);
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(10);
-            doc.text(ticket.name || '', 42, 49.5); // Fallback value
-            doc.text(`Contact No: ${ticket.contactNumber || ''}`, 10, 58); // Fallback value
-            doc.text(`Email: ${ticket.email || ''}`, 10, 64); // Fallback value
+            
+            const detailsY = 40; // Starting Y position for the details section
 
-            // Ticket Assigned To
-            doc.setFontSize(12);
+            // Add Ticket Number
+            doc.text('Ticket No:', 10, detailsY);
+            doc.setFont('helvetica', 'normal');
+            doc.text(ticket.ticketId || '', 85, detailsY);
+
+            // Rest of the ticket details with reduced spacing
             doc.setFont('helvetica', 'bold');
-            doc.text('Ticket Assigned to:', 140, 50);
+            doc.text('Ticket Assigned to:', 10, detailsY + 10);
             doc.setFont('helvetica', 'normal');
-            doc.setFontSize(10);
-            doc.text(`${ticket.engineerName || ''}`, 156, 57.5); // Fallback value
+            doc.text(ticket.engineerName || '', 85, detailsY + 10);
 
-            // Company Name
-            doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
-            doc.text('Company Name:', 10, 75);
+            doc.text('Created on:', 10, detailsY + 20);
             doc.setFont('helvetica', 'normal');
-            doc.setFontSize(10);
-            doc.text(ticket.companyName || '', 10, 83); // Fallback value
+            doc.text(`${ticket.date}` || '', 85, detailsY + 20);
 
-            // Created Date
-            doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
-            doc.text('Created on:', 140, 70);
+            doc.text('Closed on:', 10, detailsY + 30);
             doc.setFont('helvetica', 'normal');
-            doc.setFontSize(11);
-            const createdDateFormatted = formatDate(new Date(createdDate));
-            doc.text(createdDateFormatted, 165, 70); // Display formatted createdDate
+            doc.text(ticket.closeDate || '', 85, detailsY + 30);
 
-            // Closed Date
-            doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
-            doc.text('Closed on:', 140, 80);
+            doc.text('Turnaround Time (TAT):', 10, detailsY + 40);
             doc.setFont('helvetica', 'normal');
-            doc.setFontSize(11);
-            doc.text(`${ticket.closeDate || ''}`, 165, 80); // Fallback value
+            const tatText = ticket.eta.exceeds24Hours ? 
+                `${ticket.eta.totalDays} days` : 
+                '0 days';
+            doc.text(tatText, 85, detailsY + 40);
 
-            // Turnaround Time (TAT)
-doc.setFontSize(12);
-doc.setFont('helvetica', 'bold');
-doc.text('Turnaround Time (TAT):', 140, 90);
-
-// Debug: Log the eta object to see if totalDays is available and as expected
-console.log(ticket.eta);
-
-// Ensure totalDays exists and is a valid number, else fallback to 0
-const totalDays = (ticket.eta && typeof ticket.eta.totalDays === 'number' && !isNaN(ticket.eta.totalDays)) 
-  ? ticket.eta.totalDays 
-  : 0;
-
-// Debugging the value being used
-console.log('Total Days to display:', totalDays);
-
-doc.setFont('helvetica', 'normal');
-doc.setFontSize(11);
-doc.text(`${totalDays} days`, 190, 90); // Display 0 days if totalDays is unavailable or invalid
-
-
+            // Draw line after header section
             doc.setDrawColor(0, 0, 0);
             doc.setLineWidth(0.5);
-            doc.line(13, 110, 200, 110);
+            doc.line(10, detailsY + 50, 200, detailsY + 50);
 
-            // Issue Details
-            doc.setFontSize(12);
+            // Company Details Section
+            const companyY = detailsY + 60;
+            
+            // Ticket By section
             doc.setFont('helvetica', 'bold');
-            doc.text('Issue Category', 20, 130);
+            doc.text('Ticket By:', 10, companyY);
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(10);
-            doc.text(ticket.issueCategory || '', 100, 130); // Fallback value
+            
+            const ticketByAddress = [
+                'Foxnet Securitas Pvt Ltd.',
+                'Office 16, Plot No. 14, SMG-1,',
+                'Ghaziabad, Uttar Pradesh, 201005',
+                'GSTIN: 09AADCF6548G1ZF',
+                'PAN: AADCF6548G'
+            ];
+            
+            ticketByAddress.forEach((line, index) => {
+                doc.text(line, 10, companyY + 10 + (index * 7));
+            });
 
-            doc.setFontSize(12);
+            // Ticket To section
             doc.setFont('helvetica', 'bold');
-            doc.text('Issue Description', 20, 140);
+            doc.text('Ticket To:', 110, companyY);
             doc.setFont('helvetica', 'normal');
-            doc.setFontSize(10);
-            doc.text(ticket.issueDescription || '', 100, 140); // Fallback value
+            
+            // Format company address
+            const ticketToAddress = [
+                selectedCompany.name,
+                selectedCompany.address,
+                `GSTIN: ${selectedCompany.gst === 'test' ? '---' : (selectedCompany.gst || '---')}`
+            ].filter(Boolean);
+            
+            ticketToAddress.forEach((line, index) => {
+                doc.text(line, 110, companyY + 10 + (index * 7));
+            });
 
-            doc.setFontSize(12);
-            doc.setFont('helvetica', 'bold');
-            doc.text('Resolution', 20, 150);
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(10);
-            doc.text(ticket.resolution || '', 100, 150); // Fallback value
+            // Issue Details Table
+            const tableY = companyY + 60;
+            const tableWidth = 190;
+            const columns = 5;
+            const columnWidth = tableWidth / columns;
+            const cellPadding = 2;
 
-            doc.setFontSize(12);
-            doc.setFont('helvetica', 'bold');
-            doc.text('Preventive Action', 20, 160);
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(10);
-            doc.text(ticket.preventiveAction || '', 100, 160); // Fallback value
+            // Table Headers
+            const headers = ['Issue Category', 'Issue Description', 'Preventive Action', 'Warranty Category', 'Ticket Status'];
+            
+            // Prepare data
+            const rowData = [
+                ticket.issueCategory || '',
+                ticket.issueDescription || '',
+                ticket.preventiveAction || '',
+                ticket.warrantyCategory || '',
+                ticket.status || ''
+            ];
 
-            doc.setFontSize(12);
-            doc.setFont('helvetica', 'bold');
-            doc.text('Warranty Category', 20, 170);
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(10);
-            doc.text(ticket.warrantyCategory || '', 100, 170); // Fallback value
+            // Calculate wrapped text and maximum lines needed
+            let maxLines = 1;
+            const wrappedTexts = rowData.map((text, index) => {
+                const maxWidth = columnWidth - (cellPadding * 2);
+                const lines = splitTextToFit(doc, text, maxWidth);
+                maxLines = Math.max(maxLines, lines.length);
+                return lines;
+            });
 
-            // Ticket Status section with colored dot
-            doc.setFontSize(12);
-            doc.setFont('helvetica', 'bold');
-            doc.text('Ticket Status', 20, 180);
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(10);
-            const status = ticket.status || '';
-            const dotX = 105; // X position for the dot
-            const dotY = 180; // Y position for the dot
-            const dotRadius = 2; // Adjusted radius for smaller dot
+            // Calculate table dimensions
+            const lineHeight = 7;
+            const headerHeight = 10;
+            const contentHeight = (maxLines * lineHeight) + 5; // 5px padding
+            const tableHeight = headerHeight + contentHeight;
 
-            // Set color based on status
-            if (status.toLowerCase() === 'open') {
-                doc.setFillColor(87, 204, 32); // Green for open
-            } else if (status.toLowerCase() === 'closed') {
-                doc.setFillColor(255, 0, 0); // Red for closed
-            } else {
-                doc.setFillColor(0, 0, 0); // Default black if unknown
+            // Draw header background
+            doc.setFillColor(0, 0, 0);
+            doc.rect(10, tableY, tableWidth, headerHeight, 'F');
+
+            // Draw table outline
+            doc.setDrawColor(0);
+            doc.setLineWidth(0.2);
+            doc.rect(10, tableY, tableWidth, tableHeight);
+
+            // Draw vertical separators
+            for (let i = 1; i < columns; i++) {
+                const x = 10 + (i * columnWidth);
+                doc.line(x, tableY, x, tableY + tableHeight);
             }
 
-            // Draw the dot
-            doc.circle(dotX - dotRadius - 1, dotY - 1, dotRadius, 'F'); // 'F' for fill
-            doc.setTextColor(0, 0, 0); // Reset text color to black
-            doc.text(` ${status}`, dotX, dotY); // Position the text next to the dot
+            // Draw horizontal separator between header and content
+            doc.line(10, tableY + headerHeight, 200, tableY + headerHeight);
 
-            doc.setDrawColor(0, 0, 0);
-            doc.setLineWidth(0.5);
-            doc.line(13, 270, 200, 270);
+            // Add headers with white text
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(10);
+            headers.forEach((header, index) => {
+                const x = 10 + (index * columnWidth) + cellPadding;
+                const textWidth = doc.getStringUnitWidth(header) * doc.getFontSize() / doc.internal.scaleFactor;
+                const centerX = x + (columnWidth - textWidth - cellPadding * 2) / 2;
+                doc.text(header, centerX, tableY + 7);
+            });
 
+            // Add wrapped content
+            doc.setTextColor(0);
+            wrappedTexts.forEach((lines, columnIndex) => {
+                const x = 10 + (columnIndex * columnWidth) + cellPadding;
+                lines.forEach((line, lineIndex) => {
+                    const y = tableY + headerHeight + 7 + (lineIndex * lineHeight);
+                    doc.text(line, x, y);
+                });
+            });
+
+            // Resolution Section with truncation
+            const resolutionY = tableY + tableHeight + 15;
+            doc.setFont('helvetica', 'bold');
+            doc.text('Resolution:', 12, resolutionY);
+            doc.setFont('helvetica', 'normal');
+
+            // Handle resolution text wrapping with truncation
+            const resolutionLines = splitTextToFit(doc, ticket.resolution || '', 180);
+            resolutionLines.forEach((line, index) => {
+                doc.text(line, 12, resolutionY + 10 + (index * lineHeight));
+            });
+
+            // Footer
+            const footerY = Math.max(280, resolutionY + (resolutionLines.length * lineHeight) + 30);
             doc.setFontSize(10);
             doc.setTextColor(100);
-            doc.text('This is a system-generated service report. Manual signing is not required.', 50, 280);
+            doc.text('This is a system-generated service report. Manual signing is not required.', 50, footerY);
 
+            // Generate and download PDF
             const pdfBlob = doc.output('blob');
             const url = URL.createObjectURL(pdfBlob);
             window.open(url);
 
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'ticket.pdf';
+            a.download = `service_ticket_${ticketNo}.pdf`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -194,7 +257,7 @@ doc.text(`${totalDays} days`, 190, 90); // Display 0 days if totalDays is unavai
 
         reader.readAsDataURL(imageBlob);
     } catch (error) {
-        console.error('Error fetching data or generating PDF:', error);
+        console.error('Error generating service ticket PDF:', error);
     }
 };
 

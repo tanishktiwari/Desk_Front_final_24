@@ -18,8 +18,25 @@ const Operator = () => {
   const [searchField, setSearchField] = useState("all");
   const [searchVisible, setSearchVisible] = useState(false);
   const itemsPerPage = 10;
-  const companyCount = localStorage.getItem("totalCompanyCount") || "0";
+  // const companyCount = localStorage.getItem("totalCompanyCount") || "0";
+  const [operatorCount, setOperatorCount] = useState("0");
+  useEffect(() => {
+  const fetchOperatorCount = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/operator-tickets`);
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      const data = await response.json();
+      setOperatorCount(data.length.toString());
+    } catch (error) {
+      console.error("Error fetching operator count:", error);
+      setOperatorCount("0");
+    }
+  };
 
+  fetchOperatorCount();
+}, []);
   useEffect(() => {
     const fetchOperators = async () => {
       try {
@@ -264,37 +281,8 @@ const Operator = () => {
   return (
     <div className="flex flex-col mt-20 ml-32 h-full w-[88%] xl:pl-[10%] 2xl:pl-[10%] lg:pl-[15%] font-poppins">
       {/* Statistics section */}
-      <div className="flex justify-between items-center bg-white p-6 shadow-md rounded-md mb-6">
-        <div className="flex items-center justify-center md:justify-start p-4 bg-gray-50 rounded-lg">
-          <img src="/Group_10.png" alt="Operator Icon" className="mr-2 md:mr-4 h-12 w-12 md:h-16 md:w-16" />
-          <div className="flex flex-col">
-            <div className="text-2xl md:text-4xl font-semibold text-green-600">{totalEntries}</div>
-            <div className="text-sm md:text-base text-gray-500">Total Operators</div>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-center md:justify-start p-4 bg-gray-50 rounded-lg">
-          <img src="/Group_11.png" alt="Company Icon" className="mr-2 md:mr-4 h-12 w-12 md:h-16 md:w-16" />
-          <div className="flex flex-col">
-            <div className="text-2xl md:text-4xl font-semibold text-gray-800">{companyCount}</div>
-            <div className="text-sm md:text-base text-gray-500">Companies</div>
-            
-          </div>
-        </div>
-
-        <div className="flex items-center justify-center md:justify-start p-4 bg-gray-50 rounded-lg">
-          <img src="/Group_12.png" alt="Ticket Icon" className="mr-2 md:mr-4 h-12 w-12 md:h-16 md:w-16" />
-          <div className="flex flex-col">
-            <div className="text-2xl md:text-4xl font-semibold text-green-600">{activeTickets}</div>
-            <div className="text-sm md:text-base text-gray-500">Active Tickets</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main content section */}
-      <div className="bg-white p-6 shadow-md rounded-md">
-        {/* Header and Search */}
-        <div className="bg-white p-3 md:p-6 shadow-md rounded-md mb-4 md:mb-6">
+     
+      <div className="bg-white p-3 md:p-6 shadow-md rounded-md mb-4 md:mb-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <h2 className="text-xl md:text-2xl font-semibold">Ticket Owner Details</h2>
             <div className="flex flex-wrap items-center gap-2 md:gap-4">
@@ -324,14 +312,43 @@ const Operator = () => {
                 </div>
               )}
               <button
-                className="bg-buttoncolor text-white px-3 md:px-4 py-1 md:py-2 rounded-md text-sm md:text-base w-full md:w-auto"
+                className="bg-buttoncolor text-white px-3 md:px-4 py-1 md:py-2  text-sm md:text-base w-full md:w-auto"
                 onClick={handleAddClick}
               >
-                ADD TICKET OWNER
+                Add TICKET OWNER
               </button>
             </div>
           </div>
         </div>
+      {/* Main content section */}
+      <div className="bg-white p-6 shadow-md rounded-md">
+        {/* Header and Search */}
+         <div className="flex justify-between items-center bg-white p-6 shadow-md rounded-md mb-6">
+        <div className="flex items-center justify-center md:justify-start p-4 bg-gray-50 rounded-lg">
+          <img src="/Group_10.png" alt="Operator Icon" className="mr-2 md:mr-4 h-12 w-12 md:h-16 md:w-16" />
+          <div className="flex flex-col">
+            <div className="text-2xl md:text-4xl font-semibold text-green-600">{totalEntries}</div>
+            <div className="text-sm md:text-base text-gray-500">Total Operators</div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-center md:justify-start p-4 bg-gray-50 rounded-lg">
+          <img src="/Group_11.png" alt="Company Icon" className="mr-2 md:mr-4 h-12 w-12 md:h-16 md:w-16" />
+          <div className="flex flex-col">
+            <div className="text-2xl md:text-4xl font-semibold text-green-600">{operatorCount}</div>
+            <div className="text-sm md:text-base text-gray-500">Active Operators</div>
+            
+          </div>
+        </div>
+
+        <div className="flex items-center justify-center md:justify-start p-4 bg-gray-50 rounded-lg">
+          <img src="/Group_12.png" alt="Ticket Icon" className="mr-2 md:mr-4 h-12 w-12 md:h-16 md:w-16" />
+          <div className="flex flex-col">
+            <div className="text-2xl md:text-4xl font-semibold text-green-600">{activeTickets}</div>
+            <div className="text-sm md:text-base text-gray-500">Active Tickets</div>
+          </div>
+        </div>
+      </div>
 
         {/* Desktop Table */}
         <div className="hidden md:block overflow-x-auto">

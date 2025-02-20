@@ -518,6 +518,110 @@ const resetFilters = () => {
     }));
     setCurrentPage(1);
   };
+  const handleBulkExcelDownload = async () => {
+  try {
+    // Create array to store all ticket details
+    const allTicketDetails = [];
+
+    // Add headers as first row
+    const headers = [
+      "Ticket No",
+      "Name",
+      "Contact Number",
+      "Email",
+      "Company Name",
+      "Issue Category",
+      "Issue Description",
+      "Resolution",
+      "Preventive Action",
+      "Warranty Category",
+      "Status",
+      "Date",
+      "Time",
+      "Engineer Name",
+      "Close Date",
+      "Total Days (ETA)"
+    ];
+    
+    allTicketDetails.push(headers);
+
+    // Fetch details for each selected ticket
+    for (const ticketNo of selectedTickets) {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/ticket-details/${ticketNo}`
+      );
+      const ticket = response.data;
+      
+      // Calculate total days
+      const totalDays = ticket.eta?.totalDays ?? 0;
+
+      // Add ticket data
+      allTicketDetails.push([
+        ticket.ticketId,
+        ticket.name,
+        ticket.contactNumber,
+        ticket.email,
+        ticket.companyName,
+        ticket.issueCategory || "N/A",
+        ticket.issueDescription,
+        ticket.resolution,
+        ticket.preventiveAction,
+        ticket.warrantyCategory,
+        ticket.status,
+        formatDate(new Date(ticket.date)),
+        ticket.time,
+        ticket.engineerName,
+        formatDate(new Date(ticket.closeDate)),
+        totalDays
+      ]);
+    }
+
+    // Create worksheet
+    const worksheet = XLSX.utils.aoa_to_sheet(allTicketDetails);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Tickets");
+
+    // Download file
+    XLSX.writeFile(workbook, `tickets_${new Date().getTime()}.xlsx`);
+
+  } catch (error) {
+    console.error("Error downloading tickets:", error);
+    alert("Error downloading tickets. Please try again.");
+  }
+};
+const handleBulkPdfDownload = async () => {
+  try {
+    // Get all selected tickets
+    for (const ticketNo of selectedTickets) {
+      try {
+        // Get ticket details
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL}/ticket-details/${ticketNo}`
+        );
+        const ticket = response.data;
+
+        // Calculate total days and format date
+        const totalDays = ticket.eta?.totalDays ?? 0;
+        const createdDate = formatDate(new Date(ticket.date));
+
+        // Set necessary localStorage items
+        localStorage.setItem("ticketETA", totalDays);
+        localStorage.setItem("ticketCreatedDate", createdDate);
+
+        // Generate PDF for this ticket
+       generateServiceTicketPDF(ticketNo);
+
+        // Add a delay between PDF generations
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      } catch (error) {
+        console.error(`Error processing ticket ${ticketNo}:`, error);
+      }
+    }
+  } catch (error) {
+    console.error("Error in bulk PDF download:", error);
+    alert("Error downloading PDFs. Please try again.");
+  }
+};
   return (
     <div className="flex flex-col mt-20 ml-32 h-full w-[88%] xl:pl-[10%] 2xl:pl-[10%] lg:pl-[15%]">
       <div className="flex justify-between items-center bg-white h-20">
@@ -547,6 +651,25 @@ const resetFilters = () => {
             Open Tickets
           </span>
         </div>
+        {selectedTickets.size > 0 && (
+  <div className="flex items-center bg-buttoncolor px-4 py-2 rounded-md">
+    <button
+      onClick={handleBulkExcelDownload}
+      className="text-white flex items-center gap-2"
+    >
+      <img src="/excel.png" alt="Excel" className="h-5 w-5" />
+      
+    </button>
+    <div className="h-full mx-2 border-1 border-white" /> {/* Vertical separator */}
+    <button
+      onClick={handleBulkPdfDownload}
+      className="text-white flex items-center gap-2 border-l border-white pl-2.5"
+    >
+      <img src="/pdf.png" alt="PDF" className="h-5 w-5" />
+      
+    </button>
+  </div>
+)}
         <div className="flex flex-row gap-3 mr-3">
           <img
             src="/search.png"

@@ -266,32 +266,37 @@ const IssueCategoryDetails = () => {
 
   const totalEntries = filteredCategories.length;
   const totalPages = Math.ceil(totalEntries / itemsPerPage);
+  const [issueCategoryData, setIssueCategoryData] = useState({
+  count: 0,
+  categories: []
+});
+// Add new effect for fetching issue categories data
+  useEffect(() => {
+    const fetchIssueCategoryData = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/issue-category-names-last-30-days`);
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        const data = await response.json();
+        setIssueCategoryData({
+          count: data.issueCategoryCount,
+          categories: data.issueCategories
+        });
+      } catch (error) {
+        console.error("Error fetching issue category data:", error);
+      }
+    };
+
+    fetchIssueCategoryData();
+  }, []);
 
   return (
     <div className="flex flex-col mt-20 ml-32 h-full w-[88%] xl:pl-[10%] 2xl:pl-[10%] lg:pl-[15%] font-poppins">
       {/* Stats Grid */}
-      <div className="flex justify-between items-center bg-white p-6 shadow-md rounded-md mb-6">
-        <StatCard
-          icon="/Group_10.png"
-          title="Total Issue Categories"
-          value={totalEntries}
-        />
-        <StatCard
-          icon="/Group_11.png"
-          title="Companies"
-          value="16"
-        />
-        <StatCard
-          icon="/Group_12.png"
-          title="Active Tickets"
-          value={activeTickets}
-        />
-      </div>
-
-      {/* Main Content */}
-      <div className="bg-white p-6 shadow-md rounded-md">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-6">
+      
+       <div className="bg-white p-3 md:p-6 shadow-md rounded-md mb-4 md:mb-6">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <h2 className="text-xl md:text-2xl font-semibold">Company Details</h2>
           
           <div className="flex flex-col md:flex-row items-start md:items-center space-y-2 md:space-y-0 md:space-x-4 w-full md:w-auto">
@@ -317,13 +322,34 @@ const IssueCategoryDetails = () => {
             </div>
             
             <button
-              className="w-full md:w-auto bg-buttoncolor text-white px-4 py-2 rounded-md"
+              className="w-full md:w-auto bg-buttoncolor text-white px-4 py-2"
               onClick={handleAddClick}
             >
-              ADD Category
+              Add Category
             </button>
           </div>
+          </div>
         </div>
+      {/* Main Content */}
+      <div className="bg-white p-6 shadow-md rounded-md">
+        {/* Header */}
+        <div className="flex justify-between items-center bg-white p-6 shadow-md rounded-md mb-6">
+        <StatCard
+          icon="/Group_10.png"
+          title="Total Issue Categories"
+          value={totalEntries}
+        />
+        <StatCard
+          icon="/Group_11.png"
+          title="Active Issue Categories"
+          value={issueCategoryData.count}
+        />
+        <StatCard
+          icon="/Group_12.png"
+          title="Active Tickets"
+          value={activeTickets}
+        />
+      </div> 
 
         {/* Table/Cards */}
         <div className="hidden md:block">

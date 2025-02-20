@@ -1,29 +1,16 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+// components/layout/Footer.jsx
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
   const [hovered, setHovered] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const storedState = localStorage.getItem("isSidebarCollapsed");
-    if (storedState) {
-      setIsCollapsed(JSON.parse(storedState));
-    }
-  }, []);
 
   return (
-    <footer
-      className={`bg-gray-900 text-gray-400 p-4  font-poppins w-full min-h-[300px] ${
-        isCollapsed ? "pl-0" : "lg:pl-60"
-      }`}
-    >
-      <div className="w-full mx-auto px-4 sm:px-6 md:px-10 lg:px-16 2xl:px-20 2xl:pr-10 xl:px-[10%] xl:pr-[0%]">
+    <footer className="bg-gray-900 text-gray-400 p-4 font-poppins w-full min-h-[300px]">
+      <div className="w-full mx-auto px-4 sm:px-6 md:px-10">
         <div className="flex flex-col md:flex-row justify-between">
-          {/* Left Section - kept as it is */}
-          <div className="flex flex-col items-center md:items-start space-y-6 
-            sm:pl-2 md:pl-4 lg:pl-[15rem] 2xl:pl-[13rem] xl:pl-10">
+          {/* Left Section */}
+          <div className="flex flex-col items-center md:items-start space-y-6">
             {/* Logo */}
             <div
               className="relative w-[200px] h-[120px]"
@@ -69,22 +56,22 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Right Section - Modified to align to the end of the screen */}
+          {/* Right Section */}
           <div className="flex flex-col items-center md:items-end space-y-8 pt-10 md:pt-10">
             {/* Navigation Links */}
             <nav className="flex flex-col sm:flex-row items-center md:items-end gap-4 sm:gap-8">
               {[
-                { text: "Privacy Policy", route: "/dashboard/PrivacyPolicyPage" },
-                { text: "Terms of Service", route: "/dashboard/TermsOfService" },
+                { text: "Privacy Policy", route: "/dashboard/privacy-policy" },
+                { text: "Terms of Service", route: "/dashboard/terms-of-service" },
                 { text: "Security Policy", route: "/dashboard/security-policy" },
               ].map((link) => (
-                <button
+                <Link
                   key={link.text}
-                  onClick={() => navigate(link.route)}
+                  to={link.route}
                   className="text-gray-400 hover:text-white transition-colors"
                 >
                   {link.text}
-                </button>
+                </Link>
               ))}
             </nav>
 

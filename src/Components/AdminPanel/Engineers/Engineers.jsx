@@ -225,40 +225,38 @@ const Engineers = () => {
   const totalOpenTickets = localStorage.getItem('totalOpenTickets') || "0";
   setActiveTickets(totalOpenTickets);
 }, []); // Empty dependency array means this runs once when component mounts
+
+const [last30DaysEngineers, setLast30DaysEngineers] = useState({
+  count: 0,
+  engineers: []
+});
+const fetchLast30DaysEngineers = async () => {
+  try {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/engineer-names-last-30-days`);
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    const data = await response.json();
+    setLast30DaysEngineers({
+      count: data.engineerCount,
+      engineers: data.engineers
+    });
+  } catch (error) {
+    console.error("Error fetching 30-day engineer data:", error);
+  }
+};
+
+useEffect(() => {
+  fetchEngineers();
+  fetchLast30DaysEngineers(); // Add this line
+}, []);
+
+
   return (
     <div className="flex flex-col mt-20 ml-32 h-full w-[88%] xl:pl-[10%] 2xl:pl-[10%] lg:pl-[15%] font-poppins">
       {/* Statistics section */}
-      <div className="flex justify-between items-center bg-white p-6 shadow-md rounded-md mb-6">
-        <div className="flex items-center justify-center md:justify-start p-4 bg-gray-50 rounded-lg">
-          <img src="/Group_10.png" alt="Operator Icon" className="mr-2 md:mr-4 h-12 w-12 md:h-16 md:w-16" />
-          <div className="flex flex-col">
-            <div className="text-2xl md:text-4xl font-semibold text-green-600">{totalEntries}</div>
-            <div className="text-sm md:text-base text-gray-500">Total Engineer</div>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-center md:justify-start p-4 bg-gray-50 rounded-lg">
-          <img src="/Group_11.png" alt="Company Icon" className="mr-2 md:mr-4 h-12 w-12 md:h-16 md:w-16" />
-          <div className="flex flex-col">
-            <div className="text-2xl md:text-4xl font-semibold text-gray-800">{companyCount}</div>
-            <div className="text-sm md:text-base text-gray-500">Companies</div>
-            
-          </div>
-        </div>
-
-        <div className="flex items-center justify-center md:justify-start p-4 bg-gray-50 rounded-lg">
-          <img src="/Group_12.png" alt="Ticket Icon" className="mr-2 md:mr-4 h-12 w-12 md:h-16 md:w-16" />
-          <div className="flex flex-col">
-            <div className="text-2xl md:text-4xl font-semibold text-green-600">{activeTickets}</div>
-            <div className="text-sm md:text-base text-gray-500">Active Tickets</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main content section */}
-      <div className="bg-white p-6 shadow-md rounded-md">
-        {/* Header and Search */}
-        <div className="bg-white p-3 md:p-6 shadow-md rounded-md mb-4 md:mb-6">
+      
+      <div className="bg-white p-3 md:p-6 shadow-md rounded-md mb-4 md:mb-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <h2 className="text-xl md:text-2xl font-semibold">Engineer Details</h2>
             <div className="flex flex-wrap items-center gap-2 md:gap-4">
@@ -288,14 +286,44 @@ const Engineers = () => {
                 </div>
               )}
               <button
-                className="bg-buttoncolor text-white px-3 md:px-4 py-1 md:py-2 rounded-md text-sm md:text-base w-full md:w-auto"
+                className="bg-buttoncolor text-white px-3 md:px-4 py-1 md:py-2 text-sm md:text-base w-full md:w-auto"
                 onClick={handleAddClick}
               >
-                ADD Engineer
+                Add Engineer
               </button>
             </div>
           </div>
         </div>
+
+      {/* Main content section */}
+      <div className="bg-white p-6 shadow-md rounded-md">
+        {/* Header and Search */}
+        <div className="flex justify-between items-center bg-white p-6 shadow-md rounded-md mb-6">
+        <div className="flex items-center justify-center md:justify-start p-4 bg-gray-50 rounded-lg">
+          <img src="/Group_10.png" alt="Operator Icon" className="mr-2 md:mr-4 h-12 w-12 md:h-16 md:w-16" />
+          <div className="flex flex-col">
+            <div className="text-2xl md:text-4xl font-semibold text-green-600">{totalEntries}</div>
+            <div className="text-sm md:text-base text-gray-500">Total Engineer</div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-center md:justify-start p-4 bg-gray-50 rounded-lg">
+          <img src="/Group_11.png" alt="Company Icon" className="mr-2 md:mr-4 h-12 w-12 md:h-16 md:w-16" />
+          <div className="flex flex-col">
+            <div className="text-2xl md:text-4xl font-semibold text-green-600">{last30DaysEngineers.count}</div>
+            <div className="text-sm md:text-base text-gray-500">Active Engineers</div>
+            
+          </div>
+        </div>
+
+        <div className="flex items-center justify-center md:justify-start p-4 bg-gray-50 rounded-lg">
+          <img src="/Group_12.png" alt="Ticket Icon" className="mr-2 md:mr-4 h-12 w-12 md:h-16 md:w-16" />
+          <div className="flex flex-col">
+            <div className="text-2xl md:text-4xl font-semibold text-green-600">{activeTickets}</div>
+            <div className="text-sm md:text-base text-gray-500">Active Tickets</div>
+          </div>
+        </div>
+      </div>
 
         {/* Desktop Table */}
         <div className="hidden md:block overflow-x-auto">

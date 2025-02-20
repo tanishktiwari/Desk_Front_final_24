@@ -11,7 +11,7 @@ const Dashboard = () => {
       <Navbar />
       <div className="flex flex-1">
         <Sidebar />
-        <main className="flex-1 p-6"> {/* Main content area */}
+        <main className="flex-1 p-6 pb-0"> {/* Main content area */}
           <Outlet /> {/* Renders the matched child route */}
         </main>
       </div>

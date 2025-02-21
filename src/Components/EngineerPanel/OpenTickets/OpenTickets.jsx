@@ -1,27 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Calendar } from 'lucide-react';
+import axios from 'axios';
 
 const OpenTickets = () => {
-const [tickets, setTickets] = useState([
-    { id: 16, ticketNo: 'T1016', createdDate: '2025-02-06', time: '09:00 AM', category: 'Technical', issueDescription: 'System crash', companyName: 'AlphaTech Solutions' },
-    { id: 17, ticketNo: 'T1017', createdDate: '2025-02-07', time: '10:15 AM', category: 'Customer Service', issueDescription: 'Late delivery', companyName: 'QuickShip Logistics' },
-    { id: 18, ticketNo: 'T1018', createdDate: '2025-02-08', time: '11:30 AM', category: 'Billing', issueDescription: 'Payment error', companyName: 'PayMax Services' },
-    { id: 19, ticketNo: 'T1019', createdDate: '2025-02-09', time: '02:45 PM', category: 'Technical', issueDescription: 'Software bug', companyName: 'Softwave Technologies' },
-    { id: 20, ticketNo: 'T1020', createdDate: '2025-02-10', time: '03:00 PM', category: 'Support', issueDescription: 'Product installation', companyName: 'SmartTech Innovations' },
-    { id: 21, ticketNo: 'T1021', createdDate: '2025-02-11', time: '01:15 PM', category: 'Customer Service', issueDescription: 'Account suspension', companyName: 'CloudWave Solutions' },
-    { id: 22, ticketNo: 'T1022', createdDate: '2025-02-12', time: '04:30 PM', category: 'Technical', issueDescription: 'Slow performance', companyName: 'TechMasters Global' },
-    { id: 23, ticketNo: 'T1023', createdDate: '2025-02-13', time: '09:30 AM', category: 'Billing', issueDescription: 'Missing payment', companyName: 'Optima Services' },
-    { id: 24, ticketNo: 'T1024', createdDate: '2025-02-14', time: '11:00 AM', category: 'Support', issueDescription: 'Service interruption', companyName: 'ExcellTech Solutions' },
-    { id: 25, ticketNo: 'T1025', createdDate: '2025-02-15', time: '03:30 PM', category: 'Customer Service', issueDescription: 'Product return', companyName: 'GlobalEcom Enterprises' },
-    { id: 26, ticketNo: 'T1026', createdDate: '2025-02-16', time: '10:00 AM', category: 'Technical', issueDescription: 'Network issue', companyName: 'FutureTech Networks' },
-    { id: 27, ticketNo: 'T1027', createdDate: '2025-02-17', time: '12:00 PM', category: 'Customer Service', issueDescription: 'Refund request', companyName: 'QuickSolutions Inc.' },
-    { id: 28, ticketNo: 'T1028', createdDate: '2025-02-18', time: '02:00 PM', category: 'Accounting', issueDescription: 'Incorrect billing', companyName: 'AccuTech Services' },
-    { id: 29, ticketNo: 'T1029', createdDate: '2025-02-19', time: '04:15 PM', category: 'Support', issueDescription: 'Hardware issue', companyName: 'TechnoHub Systems' },
-    { id: 30, ticketNo: 'T1030', createdDate: '2025-02-20', time: '09:45 AM', category: 'Technical', issueDescription: 'App crash', companyName: 'BlueSky Innovations' }
-]);
-
-
-
+  const [tickets, setTickets] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedCompanies, setSelectedCompanies] = useState([]);
@@ -33,7 +15,32 @@ const [tickets, setTickets] = useState([
   const datePickerRef = useRef();
   const ticketsPerPage = 10;
 
-  const categories = [...new Set(tickets.map(ticket => ticket.category))];
+  const loggedInEngineerMobileNumber = localStorage.getItem("loggedInEngineerMobileNumber");
+
+  useEffect(() => {
+    if (loggedInEngineerMobileNumber) {
+      fetchTickets(loggedInEngineerMobileNumber);
+    }
+  }, [loggedInEngineerMobileNumber]);
+
+  const fetchTickets = async (mobileNumber) => {
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/tickets/engineer`, {
+        params: { mobile: mobileNumber }
+      });
+      const inProgressTickets = response.data.filter(ticket => ticket.status === "In-Progress");
+      setTickets(inProgressTickets);
+    } catch (error) {
+      console.error("Failed to fetch tickets:", error);
+    }
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear().toString().slice(-2)}`;
+  };
+
+  const categories = [...new Set(tickets.map(ticket => ticket.issueCategory.name))];
   const companies = [...new Set(tickets.map(ticket => ticket.companyName))];
 
   useEffect(() => {
@@ -51,19 +58,19 @@ const [tickets, setTickets] = useState([
   }, []);
 
   const filteredTickets = tickets.filter(ticket => {
-    const matchesSearch = ticket.ticketNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ticket.companyName.toLowerCase().includes(searchTerm.toLowerCase());
-    
+    const matchesSearch = (ticket.ticketId && ticket.ticketId.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (ticket.companyName && ticket.companyName.toLowerCase().includes(searchTerm.toLowerCase()));
+
     const matchesCategories = selectedCategories.length === 0 || 
-      selectedCategories.includes(ticket.category);
-    
+      selectedCategories.includes(ticket.issueCategory.name);
+
     const matchesCompanies = selectedCompanies.length === 0 || 
       selectedCompanies.includes(ticket.companyName);
-    
-    const ticketDate = new Date(ticket.createdDate);
+
+    const ticketDate = new Date(ticket.date);
     const fromDate = dateRange.from ? new Date(dateRange.from) : null;
     const toDate = dateRange.to ? new Date(dateRange.to) : null;
-    
+
     const matchesDateRange = (!fromDate || ticketDate >= fromDate) && 
       (!toDate || ticketDate <= toDate);
 
@@ -141,149 +148,148 @@ const [tickets, setTickets] = useState([
   );
 
   const FilterModal = () => (
-  isFilterOpen && (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div ref={modalRef} className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Filter Tickets</h2>
-          <button
-            onClick={() => setIsFilterOpen(false)}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            ✕
-          </button>
-        </div>
-
-        <div className="space-y-6">
-          {/* Date Range Filter */}
-          <div>
-            <h3 className="text-sm font-medium mb-2">Date Range</h3>
-            <DateRangePicker />
-          </div>
-
-          {/* Categories Filter */}
-          <div>
-            <h3 className="text-sm font-medium mb-2">Categories</h3>
-            <div className="relative">
-              <select
-                value="" // Single selection
-                onChange={(e) => {
-                  const selectedCategory = e.target.value;
-                  if (selectedCategory && !selectedCategories.includes(selectedCategory)) {
-                    setSelectedCategories([...selectedCategories, selectedCategory]);
-                  }
-                }}
-                className="w-full p-2 border rounded-md"
-              >
-                <option value="">Select a category</option>
-                {categories.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </select>
-              <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </span>
-            </div>
-            {/* Display selected categories with remove option */}
-            <div className="mt-2 flex flex-wrap gap-2">
-              {selectedCategories.map((category) => (
-                <div key={category} className="flex items-center bg-gray-100 rounded-md px-2 py-1">
-                  <span>{category}</span>
-                  <button
-                    onClick={() => {
-                      setSelectedCategories(selectedCategories.filter((cat) => cat !== category));
-                    }}
-                    className="ml-2 text-gray-500 hover:text-gray-700"
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Companies Filter */}
-          <div>
-            <h3 className="text-sm font-medium mb-2">Companies</h3>
-            <div className="relative">
-              <select
-                value={selectedCompanies[0] || ''} // Single selection
-                onChange={(e) => setSelectedCompanies([e.target.value])}
-                className="w-full p-2 border rounded-md"
-              >
-                <option value="">Select a company</option>
-                {companies.map((company) => (
-                  <option key={company} value={company}>
-                    {company}
-                  </option>
-                ))}
-              </select>
-              <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </span>
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex justify-between pt-4">
-            <button
-              onClick={clearFilters}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 rounded-md"
-            >
-              Clear Filters
-            </button>
+    isFilterOpen && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div ref={modalRef} className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold">Filter Tickets</h2>
             <button
               onClick={() => setIsFilterOpen(false)}
-              className="px-4 py-2 text-white bg-blue-500 hover:bg-blue-600 rounded-md"
+              className="text-gray-500 hover:text-gray-700"
             >
-              Apply Filters
+              ✕
             </button>
+          </div>
+
+          <div className="space-y-6">
+            {/* Date Range Filter */}
+            <div>
+              <h3 className="text-sm font-medium mb-2">Date Range</h3>
+              <DateRangePicker />
+            </div>
+
+            {/* Categories Filter */}
+            <div>
+              <h3 className="text-sm font-medium mb-2">Categories</h3>
+              <div className="relative">
+                <select
+                  value=""
+                  onChange={(e) => {
+                    const selectedCategory = e.target.value;
+                    if (selectedCategory && !selectedCategories.includes(selectedCategory)) {
+                      setSelectedCategories([...selectedCategories, selectedCategory]);
+                    }
+                  }}
+                  className="w-full p-2 border rounded-md"
+                >
+                  <option value="">Select a category</option>
+                  {categories.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
+                <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </span>
+              </div>
+              {/* Display selected categories with remove option */}
+              <div className="mt-2 flex flex-wrap gap-2">
+                {selectedCategories.map((category) => (
+                  <div key={category} className="flex items-center bg-gray-100 rounded-md px-2 py-1">
+                    <span>{category}</span>
+                    <button
+                      onClick={() => {
+                        setSelectedCategories(selectedCategories.filter((cat) => cat !== category));
+                      }}
+                      className="ml-2 text-gray-500 hover:text-gray-700"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Companies Filter */}
+            <div>
+              <h3 className="text-sm font-medium mb-2">Companies</h3>
+              <div className="relative">
+                <select
+                  value={selectedCompanies[0] || ''}
+                  onChange={(e) => setSelectedCompanies([e.target.value])}
+                  className="w-full p-2 border rounded-md"
+                >
+                  <option value="">Select a company</option>
+                  {companies.map((company) => (
+                    <option key={company} value={company}>
+                      {company}
+                    </option>
+                  ))}
+                </select>
+                <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </span>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex justify-between pt-4">
+              <button
+                onClick={clearFilters}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 rounded-md"
+              >
+                Clear Filters
+              </button>
+              <button
+                onClick={() => setIsFilterOpen(false)}
+                className="px-4 py-2 text-white bg-blue-500 hover:bg-blue-600 rounded-md"
+              >
+                Apply Filters
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  )
-);
+    )
+  );
 
-  // Mobile Card Component
+  // TicketCard Component for Mobile View
   const TicketCard = ({ ticket }) => (
     <div className="bg-white rounded-lg shadow p-4 mb-4">
       <div className="flex justify-between items-start mb-2">
-        <span className="font-medium text-lg">{ticket.ticketNo}</span>
-        <span className="text-sm text-gray-500">{ticket.time}</span>
+        <span className="font-medium text-lg">{ticket.ticketId}</span>
       </div>
       <div className="space-y-2">
         <div className="flex justify-between">
           <span className="text-gray-600">Date:</span>
-          <span>{ticket.createdDate}</span>
+          <span>{formatDate(ticket.date)}</span>
         </div>
         <div className="flex justify-between">
           <span className="text-gray-600">Category:</span>
-          <span>{ticket.category}</span>
+          <span>{ticket.issueCategory.name}</span>
         </div>
         <div className="flex justify-between">
           <span className="text-gray-600">Company:</span>
           <span>{ticket.companyName}</span>
         </div>
-        <div>
-          <span className="text-gray-600">Issue:</span>
-          <p className="mt-1">{ticket.issueDescription}</p>
+        <div className="flex justify-between">
+          <span className="text-gray-600">Status:</span>
+          <span>{ticket.status}</span>
         </div>
         <div className="flex justify-end space-x-2 mt-4">
           <button
-            onClick={() => handleDownload(ticket.id, 'pdf')}
+            onClick={() => handleDownload(ticket._id, 'pdf')}
             className="px-3 py-1 text-sm text-blue-500 border border-blue-500 rounded hover:bg-blue-50"
           >
             PDF
           </button>
           <button
-            onClick={() => handleDownload(ticket.id, 'excel')}
+            onClick={() => handleDownload(ticket._id, 'excel')}
             className="px-3 py-1 text-sm text-green-500 border border-green-500 rounded hover:bg-green-50"
           >
             Excel
@@ -304,10 +310,9 @@ const [tickets, setTickets] = useState([
           placeholder="Search by Ticket No or Company Name"
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
-          className="p-2 border rounded-lg flex-grow "
+          className="p-2 border rounded-lg flex-grow"
         />
         <div className="flex gap-2">
-          
           <button
             onClick={() => setIsFilterOpen(true)}
             className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
@@ -316,27 +321,6 @@ const [tickets, setTickets] = useState([
           </button>
         </div>
       </div>
-
-      {/* Active Filters Display */}
-      {/* {(selectedCategories.length > 0 || selectedCompanies.length > 0 || dateRange.from || dateRange.to) && (
-        <div className="mb-4 flex flex-wrap gap-2">
-          {(dateRange.from || dateRange.to) && (
-            <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-              {dateRange.from || 'Start'} - {dateRange.to || 'End'}
-            </span>
-          )}
-          {selectedCategories.map(category => (
-            <span key={category} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-              {category}
-            </span>
-          ))}
-          {selectedCompanies.map(company => (
-            <span key={company} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-              {company}
-            </span>
-          ))}
-        </div>
-      )} */}
 
       <FilterModal />
 
@@ -347,31 +331,29 @@ const [tickets, setTickets] = useState([
             <tr>
               <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Ticket No</th>
               <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Created Date</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Time</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Category</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Issue Description</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Category</th>
               <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Company Name</th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Status</th>
               <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Download</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
             {currentTickets.map(ticket => (
-              <tr key={ticket.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 text-sm text-gray-900">{ticket.ticketNo}</td>
-                <td className="px-6 py-4 text-sm text-gray-900">{ticket.createdDate}</td>
-                <td className="px-6 py-4 text-sm text-gray-900">{ticket.time}</td>
-                <td className="px-6 py-4 text-sm text-gray-900">{ticket.category}</td>
-                <td className="px-6 py-4 text-sm text-gray-900">{ticket.issueDescription}</td>
+              <tr key={ticket._id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 text-sm text-gray-900">{ticket.ticketId}</td>
+                <td className="px-6 py-4 text-sm text-gray-900">{formatDate(ticket.date)}</td>
+                <td className="px-6 py-4 text-sm text-gray-900">{ticket.issueCategory.name}</td>
                 <td className="px-6 py-4 text-sm text-gray-900">{ticket.companyName}</td>
+                <td className="px-6 py-4 text-sm text-gray-900">{ticket.status}</td>
                 <td className="px-6 py-4 text-sm text-gray-900">
                   <button
-                    onClick={() => handleDownload(ticket.id, 'pdf')}
+                    onClick={() => handleDownload(ticket._id, 'pdf')}
                     className="text-blue-500 hover:text-blue-700 mr-2"
                   >
                     PDF
                   </button>
                   <button
-                    onClick={() => handleDownload(ticket.id, 'excel')}
+                    onClick={() => handleDownload(ticket._id, 'excel')}
                     className="text-green-500 hover:text-green-700"
                   >
                     Excel
@@ -386,10 +368,9 @@ const [tickets, setTickets] = useState([
       {/* Mobile Card View */}
       <div className="md:hidden space-y-4">
         {currentTickets.map(ticket => (
-          <TicketCard key={ticket.id} ticket={ticket} />
+          <TicketCard key={ticket._id} ticket={ticket} />
         ))}
       </div>
-
       {/* Pagination */}
       <div className="mt-6">
         <Pagination

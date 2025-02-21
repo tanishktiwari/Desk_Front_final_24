@@ -22,7 +22,7 @@ const Engineers = () => {
     mobile: "",
   });
   const [searchTerm, setSearchTerm] = useState("");
-  const [searchCategory, setSearchCategory] = useState("all"); // New state for search category
+  const [searchCategory, setSearchCategory] = useState("all");
   const [searchVisible, setSearchVisible] = useState(false);
   const companyCount = localStorage.getItem("totalCompanyCount") || "0";
 
@@ -43,7 +43,6 @@ const Engineers = () => {
     fetchEngineers();
   }, []);
 
-  // Modified search logic to handle category-based filtering
   const filteredEngineers = engineers.filter((engineer) => {
     const searchValue = searchTerm.toLowerCase();
     
@@ -79,7 +78,6 @@ const Engineers = () => {
 
   const totalPages = Math.ceil(filteredEngineers.length / itemsPerPage);
 
-  // Rest of the handlers remain the same
   const handleAddClick = () => {
     setShowPopup(true);
     setEditingEngineerId(null);
@@ -161,8 +159,8 @@ const Engineers = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          name,
           title,
+          name,
           email,
           mobile,
           contractType,
@@ -171,7 +169,8 @@ const Engineers = () => {
       });
 
       if (!response.ok) {
-        throw new Error("Network response was not ok");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Network response was not ok");
       }
 
       fetchEngineers();
@@ -186,6 +185,7 @@ const Engineers = () => {
       });
     } catch (error) {
       console.error("Error adding or updating engineer:", error);
+      alert(error.message); // Provide user feedback
     }
   };
 
@@ -219,111 +219,109 @@ const Engineers = () => {
       }
     }
   };
+
   const [activeTickets, setActiveTickets] = useState("0");
   useEffect(() => {
-  // Get the value from localStorage
-  const totalOpenTickets = localStorage.getItem('totalOpenTickets') || "0";
-  setActiveTickets(totalOpenTickets);
-}, []); // Empty dependency array means this runs once when component mounts
+    const totalOpenTickets = localStorage.getItem('totalOpenTickets') || "0";
+    setActiveTickets(totalOpenTickets);
+  }, []);
 
-const [last30DaysEngineers, setLast30DaysEngineers] = useState({
-  count: 0,
-  engineers: []
-});
-const fetchLast30DaysEngineers = async () => {
-  try {
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/engineer-names-last-30-days`);
-    if (!response.ok) {
-      throw new Error("Network response was not ok");
+  const [last30DaysEngineers, setLast30DaysEngineers] = useState({
+    count: 0,
+    engineers: []
+  });
+
+  const fetchLast30DaysEngineers = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/engineer-names-last-30-days`);
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      const data = await response.json();
+      setLast30DaysEngineers({
+        count: data.engineerCount,
+        engineers: data.engineers
+      });
+    } catch (error) {
+      console.error("Error fetching 30-day engineer data:", error);
     }
-    const data = await response.json();
-    setLast30DaysEngineers({
-      count: data.engineerCount,
-      engineers: data.engineers
-    });
-  } catch (error) {
-    console.error("Error fetching 30-day engineer data:", error);
-  }
-};
+  };
 
-useEffect(() => {
-  fetchEngineers();
-  fetchLast30DaysEngineers(); // Add this line
-}, []);
-
+  useEffect(() => {
+    fetchEngineers();
+    fetchLast30DaysEngineers();
+  }, []);
 
   return (
     <div className="flex flex-col mt-20 ml-32 h-full w-[88%] xl:pl-[10%] 2xl:pl-[10%] lg:pl-[15%] font-poppins">
       {/* Statistics section */}
-      
       <div className="bg-white p-3 md:p-6 shadow-md rounded-md mb-4 md:mb-6">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <h2 className="text-xl md:text-2xl font-semibold">Engineer Details</h2>
-            <div className="flex flex-wrap items-center gap-2 md:gap-4">
-              <button onClick={() => setSearchVisible(!searchVisible)} className="relative">
-                <img src='/search.png' alt="Search" className="w-6 h-6" />
-              </button>
-              {searchVisible && (
-                <div className="flex gap-2">
-                  <select
-                    value={searchCategory}
-                    onChange={(e) => setSearchCategory(e.target.value)}
-                    className="border rounded-md py-1 md:py-2 px-2 md:px-4"
-                  >
-                    <option value="all">All</option>
-                    <option value="name">Name</option>
-                    <option value="email">Email</option>
-                    <option value="mobile">Mobile</option>
-                    <option value="title">Title</option>
-                  </select>
-                  <input
-                    type="text"
-                    placeholder="Search..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="border rounded-md py-1 md:py-2 px-2 md:px-4 w-full md:w-auto"
-                  />
-                </div>
-              )}
-              <button
-                className="bg-buttoncolor text-white px-3 md:px-4 py-1 md:py-2 text-sm md:text-base w-full md:w-auto"
-                onClick={handleAddClick}
-              >
-                Add Engineer
-              </button>
-            </div>
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+          <h2 className="text-xl md:text-2xl font-semibold">Engineer Details</h2>
+          <div className="flex flex-wrap items-center gap-2 md:gap-4">
+            <button onClick={() => setSearchVisible(!searchVisible)} className="relative">
+              <img src='/search.png' alt="Search" className="w-6 h-6" />
+            </button>
+            {searchVisible && (
+              <div className="flex gap-2">
+                <select
+                  value={searchCategory}
+                  onChange={(e) => setSearchCategory(e.target.value)}
+                  className="border rounded-md py-1 md:py-2 px-2 md:px-4"
+                >
+                  <option value="all">All</option>
+                  <option value="name">Name</option>
+                  <option value="email">Email</option>
+                  <option value="mobile">Mobile</option>
+                  <option value="title">Title</option>
+                </select>
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="border rounded-md py-1 md:py-2 px-2 md:px-4 w-full md:w-auto"
+                />
+              </div>
+            )}
+            <button
+              className="bg-buttoncolor text-white px-3 md:px-4 py-1 md:py-2 text-sm md:text-base w-full md:w-auto"
+              onClick={handleAddClick}
+            >
+              Add Engineer
+            </button>
           </div>
         </div>
+      </div>
 
       {/* Main content section */}
       <div className="bg-white p-6 shadow-md rounded-md">
         {/* Header and Search */}
         <div className="flex justify-between items-center bg-white p-6 shadow-md rounded-md mb-6">
-        <div className="flex items-center justify-center md:justify-start p-4 bg-gray-50 rounded-lg">
-          <img src="/Group_10.png" alt="Operator Icon" className="mr-2 md:mr-4 h-12 w-12 md:h-16 md:w-16" />
-          <div className="flex flex-col">
-            <div className="text-2xl md:text-4xl font-semibold text-green-600">{totalEntries}</div>
-            <div className="text-sm md:text-base text-gray-500">Total Engineer</div>
+          <div className="flex items-center justify-center md:justify-start p-4 bg-gray-50 rounded-lg">
+            <img src="/Group_10.png" alt="Operator Icon" className="mr-2 md:mr-4 h-12 w-12 md:h-16 md:w-16" />
+            <div className="flex flex-col">
+              <div className="text-2xl md:text-4xl font-semibold text-green-600">{totalEntries}</div>
+              <div className="text-sm md:text-base text-gray-500">Total Engineer</div>
+            </div>
           </div>
-        </div>
 
-        <div className="flex items-center justify-center md:justify-start p-4 bg-gray-50 rounded-lg">
-          <img src="/Group_11.png" alt="Company Icon" className="mr-2 md:mr-4 h-12 w-12 md:h-16 md:w-16" />
-          <div className="flex flex-col">
-            <div className="text-2xl md:text-4xl font-semibold text-green-600">{last30DaysEngineers.count}</div>
-            <div className="text-sm md:text-base text-gray-500">Active Engineers</div>
-            
+          <div className="flex items-center justify-center md:justify-start p-4 bg-gray-50 rounded-lg">
+            <img src="/Group_11.png" alt="Company Icon" className="mr-2 md:mr-4 h-12 w-12 md:h-16 md:w-16" />
+            <div className="flex flex-col">
+              <div className="text-2xl md:text-4xl font-semibold text-green-600">{last30DaysEngineers.count}</div>
+              <div className="text-sm md:text-base text-gray-500">Active Engineers</div>
+            </div>
           </div>
-        </div>
 
-        <div className="flex items-center justify-center md:justify-start p-4 bg-gray-50 rounded-lg">
-          <img src="/Group_12.png" alt="Ticket Icon" className="mr-2 md:mr-4 h-12 w-12 md:h-16 md:w-16" />
-          <div className="flex flex-col">
-            <div className="text-2xl md:text-4xl font-semibold text-green-600">{activeTickets}</div>
-            <div className="text-sm md:text-base text-gray-500">Active Tickets</div>
+          <div className="flex items-center justify-center md:justify-start p-4 bg-gray-50 rounded-lg">
+            <img src="/Group_12.png" alt="Ticket Icon" className="mr-2 md:mr-4 h-12 w-12 md:h-16 md:w-16" />
+            <div className="flex flex-col">
+              <div className="text-2xl md:text-4xl font-semibold text-green-600">{activeTickets}</div>
+              <div className="text-sm md:text-base text-gray-500">Active Tickets</div>
+            </div>
           </div>
         </div>
-      </div>
 
         {/* Desktop Table */}
         <div className="hidden md:block overflow-x-auto">
@@ -364,7 +362,7 @@ useEffect(() => {
           </table>
         </div>
 
-      {/* Mobile Cards (hidden on desktop) */}
+        {/* Mobile Cards (hidden on desktop) */}
         <div className="md:hidden grid grid-cols-1 gap-4">
           {paginatedEngineers.map((engineer) => (
             <div key={engineer._id} className="bg-gray-50 p-4 rounded-lg shadow">
@@ -450,9 +448,8 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* Keep the existing popup component */}
-      {/* ... */}
-	   {showPopup && (
+      {/* Popup for adding/editing engineers */}
+      {showPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="p-4 border-b">

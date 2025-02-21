@@ -107,7 +107,8 @@ function App() {
                   <Route path="healthcheck" element={<HealthCheckForm />} />
                   <Route path="periodicreport" element={<PeriodicReport />} />
                   <Route path="promptmanager" element={<PromptManager />} />
-                  <Route path="home" element={<HomeAdmin />} />
+                  <Route path="home" element={<Home />} />
+                  <Route path="homeadmin" element={<HomeAdmin />} />
                 </Route>
 
                 {/* Protected Engineer Dashboard Routes */}

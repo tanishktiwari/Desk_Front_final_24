@@ -192,7 +192,7 @@ const Sidebar = () => {
         {/* Version Info */}
         <div className="mt-auto border-t border-gray-200 p-4">
           <div className="text-center text-sm text-gray-600">
-            <p className="font-medium">Version 1.0.1</p>
+            <p className="font-medium">Version 1.2.3</p>
             <p className="mt-1">© 2024 DeskAssure</p>
           </div>
         </div>

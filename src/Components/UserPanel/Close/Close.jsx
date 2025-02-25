@@ -111,15 +111,24 @@ const [isFilterPopupVisible, setIsFilterPopupVisible] = useState(false); // To t
   }
 
   // ETA filtering
-  if (filterCriteria.etaMin) {
-    filteredResults = filteredResults.filter(
-      (ticket) => ticket.eta >= parseInt(filterCriteria.etaMin)
-    );
-  }
-  if (filterCriteria.etaMax) {
-    filteredResults = filteredResults.filter(
-      (ticket) => ticket.eta <= parseInt(filterCriteria.etaMax)
-    );
+   if (filterCriteria.etaMin || filterCriteria.etaMax) {
+    filteredResults = filteredResults.filter((ticket) => {
+      // Get ETA value from etaData state
+      const etaValue = etaData[ticket.ticketNo];
+      if (!etaValue) return false;
+
+      // Extract numeric value from ETA string (e.g., "2 days" -> 2)
+      const etaDays = parseInt(etaValue.split(' ')[0]) || 0;
+
+      if (filterCriteria.etaMin && filterCriteria.etaMax) {
+        return etaDays >= parseInt(filterCriteria.etaMin) && etaDays <= parseInt(filterCriteria.etaMax);
+      } else if (filterCriteria.etaMin) {
+        return etaDays >= parseInt(filterCriteria.etaMin);
+      } else if (filterCriteria.etaMax) {
+        return etaDays <= parseInt(filterCriteria.etaMax);
+      }
+      return true;
+    });
   }
 
   // Date range filtering
@@ -309,32 +318,31 @@ useEffect(() => {
   }, [mobileNumber]);
 
   // Fetch ETAs for the tickets
-  useEffect(() => {
-    const fetchETAs = async () => {
-      if (!mobileNumber) return;
+ // Update the fetchETAs useEffect
+useEffect(() => {
+  const fetchETAs = async () => {
+    if (!mobileNumber) return;
 
-      try {
-        const response = await axios.get(
-          `${
-            import.meta.env.VITE_API_URL
-          }/tickets/eta-by-mobile/${mobileNumber}`
-        );
-        const etaResults = {};
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/tickets/eta-by-mobile/${mobileNumber}`
+      );
+      const etaResults = {};
 
-        response.data.tickets.forEach((eta) => {
-          const totalHours = eta.totalHours;
-          const totalDays = eta.totalDays;
-          etaResults[eta.ticketId] =
-            totalHours > 24 ? `${totalDays} days` : `${totalHours} hours`;
-        });
-        setEtaData(etaResults);
-      } catch (error) {
-        setError("Failed to fetch ETAs.");
-      }
-    };
+      response.data.tickets.forEach((eta) => {
+        const totalHours = eta.totalHours;
+        const totalDays = eta.totalDays;
+        // Always display in days, show 0 days if less than 24 hours
+        etaResults[eta.ticketId] = `${totalDays} days`;
+      });
+      setEtaData(etaResults);
+    } catch (error) {
+      setError("Failed to fetch ETAs.");
+    }
+  };
 
-    fetchETAs();
-  }, [mobileNumber]);
+  fetchETAs();
+}, [mobileNumber]);
 
   // Fetch initials based on tickets
   const fetchInitials = async (tickets) => {
@@ -690,7 +698,35 @@ const handleBulkPdfDownload = async () => {
     alert("Error downloading PDFs. Please try again.");
   }
 };
-  
+  const [sortConfig, setSortConfig] = useState({
+  key: null,
+  direction: 'asc'
+});
+const handleSort = (key) => {
+  let direction = 'asc';
+  if (sortConfig.key === key && sortConfig.direction === 'asc') {
+    direction = 'desc';
+  }
+  setSortConfig({ key, direction });
+
+  const sortedTickets = [...displayedTickets].sort((a, b) => {
+    if (key === 'date') {
+      return direction === 'asc' 
+        ? new Date(a.createdDate) - new Date(b.createdDate)
+        : new Date(b.createdDate) - new Date(a.createdDate);
+    }
+    if (key === 'eta') {
+      const etaA = parseInt(etaData[a.ticketNo]?.split(' ')[0]) || 0;
+      const etaB = parseInt(etaData[b.ticketNo]?.split(' ')[0]) || 0;
+      return direction === 'asc' ? etaA - etaB : etaB - etaA;
+    }
+    if (a[key] < b[key]) return direction === 'asc' ? -1 : 1;
+    if (a[key] > b[key]) return direction === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  setDisplayedTickets(sortedTickets);
+};
   return (
     <div className="flex flex-col mt-20 ml-32 h-full w-[88%] xl:pl-[10%] 2xl:pl-[10%] lg:pl-[15%]">
       <div className="flex justify-between items-center bg-white h-20">
@@ -976,47 +1012,57 @@ const handleBulkPdfDownload = async () => {
             ) : (
               <>
                 <table className="min-w-full text-left text-sm font-light text-surface dark:text-white">
-                  <thead className="border-b border-neutral-200 bg-white font-medium dark:border-white/10 dark:bg-body-dark">
-                    <tr>
-                      <th scope="col" className="px-2 py-2 font-poppins">
-                       
-                          <input
-                            type="checkbox"
-                            onChange={(e) => {
-                              setSelectedTickets(
-                                e.target.checked
-                                  ? new Set(
-                                      currentTickets.map(
-                                        (ticket) => ticket.ticketNo
-                                      )
-                                    )
-                                  : new Set()
-                              );
-                            }}
-                          />
-                        
-                      </th>
-                      {[
-                        "Ticket No.",
-                        "Date",
-                        "Time",
-                        "Category",
-                        "Issue Description",
-                        "ETA",
-                        "Preview",
-                        "Chat",
-                        "Download",
-                        "Track",
-                      ].map((header) => (
-                        <th
-                          key={header}
-                          className="px-4 py-2 font-poppins text-[#343A40] text-[14px] font-[700] leading-[22px] text-center"
-                        >
-                          {header}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
+        <thead className="border-b border-neutral-200 bg-white font-medium dark:border-white/10 dark:bg-body-dark">
+  <tr>
+    <th scope="col" className="px-2 py-2 font-poppins">
+      <input
+        type="checkbox"
+        onChange={(e) => {
+          setSelectedTickets(
+            e.target.checked
+              ? new Set(currentTickets.map((ticket) => ticket.ticketNo))
+              : new Set()
+          );
+        }}
+      />
+    </th>
+    {[
+      { label: "Ticket No.", key: "ticketNo" },
+      { label: "Date", key: "date" },
+      { label: "Time", key: "time" },
+      { label: "Category", key: "issueCategory" },
+      { label: "Issue Description", key: "issueDescription" },
+      { label: "ETA", key: "eta" },
+      { label: "Preview", key: null },
+      { label: "Chat", key: null },
+      { label: "Download", key: null },
+      { label: "Track", key: null }
+    ].map((header) => (
+      <th
+        key={header.label}
+        className="px-4 py-2 font-poppins text-[#343A40] text-[14px] font-[700] leading-[22px] text-center"
+      >
+        <div className="flex items-center justify-center gap-1">
+          {header.key ? (
+            <button
+              onClick={() => handleSort(header.key)}
+              className="flex items-center gap-1 hover:bg-gray-100 px-2 py-1 rounded transition-colors duration-200"
+            >
+              {header.label}
+              <span className="text-gray-500">
+                {sortConfig.key === header.key ? (
+                  sortConfig.direction === 'asc' ? '↑' : '↓'
+                ) : '↕'}
+              </span>
+            </button>
+          ) : (
+            header.label
+          )}
+        </div>
+      </th>
+    ))}
+  </tr>
+</thead>
 <tbody>
   {displayedTickets
     .slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage)

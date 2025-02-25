@@ -7,17 +7,21 @@ const Company = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [searchVisible, setSearchVisible] = useState(false);
   const [companyData, setCompanyData] = useState({
-    name: "",
-    gst: "",
-    website: "",
-    address: "",
-    logo: "",
-    ppm: "default", // Default value for PPM dropdown
-    maintenanceStart: "",
-    maintenanceEnd: "",
-    healthCheck: "default", // Default value for Health Check dropdown
-    supportTimings: "default", // Default support timings
-  });
+  name: "",
+  gst: "",
+  website: "",
+  address: "",
+  logo: "",
+  ppm: "default",
+  maintenanceStart: "",
+  maintenanceEnd: "",
+  healthCheck: "default",
+  supportTimings: "default",
+  coordinates: {
+    lat: "",
+    lon: ""
+  }
+});
   
 
   const [companies, setCompanies] = useState([]);
@@ -101,43 +105,69 @@ const Company = () => {
   };
 
   const handleClosePopup = () => {
-    setShowPopup(false);
-    setEditingCompanyId(null);
-    setCompanyData({
-      name: "",
-      gst: "",
-      website: "",
-      address: "",
-      logo: "",
-      ppm: "default",
-      healthCheck: "default",
-    });
-    setErrors({ name: "", gst: "" });
-  };
+  setShowPopup(false);
+  setEditingCompanyId(null);
+  setCompanyData({
+    name: "",
+    gst: "",
+    website: "",
+    address: "",
+    logo: "",
+    ppm: "default",
+    healthCheck: "default",
+    supportTimings: "default",
+    maintenanceStart: "",
+    maintenanceEnd: "",
+    coordinates: {
+      lat: "",
+      lon: ""
+    }
+  });
+  setErrors({ name: "", gst: "", coordinates: "" });
+};
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+  const { name, value } = e.target;
+  
+  if (name === "lat" || name === "lon") {
+    setCompanyData({
+      ...companyData,
+      coordinates: {
+        ...companyData.coordinates,
+        [name]: value
+      }
+    });
+  } else {
     setCompanyData({ ...companyData, [name]: value });
+  }
+  
+  if (name === "name" || name === "gst") {
     setErrors({ ...errors, [name]: "" });
-  };
+  }
+};
 
   const validateFields = () => {
-    let isValid = true;
-    const newErrors = { name: "", gst: "" };
+  let isValid = true;
+  const newErrors = { name: "", gst: "", coordinates: "" };
 
-    if (!companyData.name) {
-      newErrors.name = "Company Name is required";
-      isValid = false;
-    }
+  if (!companyData.name) {
+    newErrors.name = "Company Name is required";
+    isValid = false;
+  }
 
-    if (!companyData.gst) {
-      newErrors.gst = "Company GST is required";
-      isValid = false;
-    }
+  if (!companyData.gst) {
+    newErrors.gst = "Company GST is required";
+    isValid = false;
+  }
 
-    setErrors(newErrors);
-    return isValid;
-  };
+  if (!companyData.coordinates.lat || !companyData.coordinates.lon) {
+    newErrors.coordinates = "Both latitude and longitude are required";
+    isValid = false;
+  }
+
+  setErrors(newErrors);
+  return isValid;
+};
 
   const handleSubmit = async () => {
     // Prepare the payload to send to the server
@@ -155,6 +185,10 @@ const Company = () => {
         ? new Date(companyData.maintenanceEnd).toISOString()
         : null,
       supportTimings: companyData.supportTimings, // Ensure supportTimings is passed
+      coordinates: {
+      lat: companyData.coordinates.lat,
+      lon: companyData.coordinates.lon
+    }
     };
 
     console.log("Sending payload:", payload); // Log the payload to verify
@@ -217,22 +251,25 @@ const Company = () => {
   };
 
   const handleEditClick = (company) => {
-    console.log("Editing company: ", company); // Check API response and structure
-    setEditingCompanyId(company._id);
-    setCompanyData({
-      name: company.name,
-      gst: company.gst,
-      website: company.website,
-      address: company.address,
-      logo: company.logo,
-      ppm: company.ppmCheck?.frequency || "default",
-      healthCheck: company.healthCheck?.frequency || "default",
-      maintenanceStart: formatDate(company.maintenanceStartDate), // Ensure this is being correctly formatted
-      maintenanceEnd: formatDate(company.maintenanceEndDate),
-      supportTimings: company.supportTimings || "default", // Ensure this is properly set
-    });
-    setShowPopup(true);
-  };
+  setEditingCompanyId(company._id);
+  setCompanyData({
+    name: company.name,
+    gst: company.gst,
+    website: company.website,
+    address: company.address,
+    logo: company.logo,
+    ppm: company.ppmCheck?.frequency || "default",
+    healthCheck: company.healthCheck?.frequency || "default",
+    maintenanceStart: formatDate(company.maintenanceStartDate),
+    maintenanceEnd: formatDate(company.maintenanceEndDate),
+    supportTimings: company.supportTimings || "default",
+    coordinates: {
+      lat: company.coordinates?.lat || "",
+      lon: company.coordinates?.lon || ""
+    }
+  });
+  setShowPopup(true);
+};
 
   const handleDeleteClick = async (id) => {
     if (window.confirm("Are you sure you want to delete this company?")) {
@@ -567,6 +604,36 @@ useEffect(() => {
                       onChange={handleInputChange}
                     />
                   </div>
+                  <div className="title-name-company">
+  <label htmlFor="coordinates">
+    Coordinates<span className="required-star">*</span>
+  </label>
+  <div className="flex space-x-4">
+    <div className="flex-1">
+      <input
+        id="lat"
+        name="lat"
+        type="text"
+        placeholder="Latitude"
+        value={companyData.coordinates.lat}
+        onChange={handleInputChange}
+      />
+    </div>
+    <div className="flex-1">
+      <input
+        id="lon"
+        name="lon"
+        type="text"
+        placeholder="Longitude"
+        value={companyData.coordinates.lon}
+        onChange={handleInputChange}
+      />
+    </div>
+  </div>
+  {errors.coordinates && (
+    <p className="error-message">{errors.coordinates}</p>
+  )}
+</div>
                 </div>
                 <div className="popup-footer-company">
                   <button className="cancel-button" onClick={handleClosePopup}>

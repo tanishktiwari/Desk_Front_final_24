@@ -521,16 +521,13 @@ const OpenticketAdmin = () => {
   };
 
   const handleCloseModal = () => {
-    setModalOpen(false);
-    setSelectedTicket(null);
-    localStorage.removeItem("selectedTicketId");
-    fetchTickets();
-
-    setTimeout(() => {
-      console.log("Page refresh triggered after 2 seconds");
-      window.location.reload();
-    }, 1000);
-  };
+  setModalOpen(false);
+  setSelectedTicket(null);
+  localStorage.removeItem("selectedTicketId");
+  
+  // Refresh the ticket data without reloading the page
+  fetchTickets();
+};
 
   const [tooltipVisible, setTooltipVisible] = useState({});
 

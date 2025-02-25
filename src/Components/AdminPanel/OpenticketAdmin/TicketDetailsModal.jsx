@@ -140,25 +140,25 @@ const TicketDetailsModal = ({ isOpen, onClose, ticket }) => {
       }
     };
 
- if (ticket) {
-  setTicketId(ticket.ticketId || "");
-  setResolution(ticket.resolution || "");
-  setPreventiveAction(ticket.preventiveAction || "");
-  setWarrantyCategory(ticket.warrantyCategory || "");
-  setTicketStatus(ticket.status === "In-Progress" ? "In Progress" : ticket.status || "");
-  // Add this line to set engineer ID if ticket is in progress
-  if (ticket.status === "In-Progress" && engineers.length > 0) {
-    const assignedEngineer = engineers.find(eng => eng.name === ticket.engineerName);
-    if (assignedEngineer) {
-      setEngineerId(assignedEngineer._id);
-    }
-  }
-  setTicketDetails(ticket);
-  
-  if (ticket.contactNumber) {
-    fetchOperatorDetails(ticket.contactNumber);
-  }
-} else {
+    if (ticket) {
+      setTicketId(ticket.ticketId || "");
+      setResolution(ticket.resolution || "");
+      setPreventiveAction(ticket.preventiveAction || "");
+      setWarrantyCategory(ticket.warrantyCategory || "");
+      setTicketStatus(ticket.status === "In-Progress" ? "In Progress" : ticket.status || "");
+      setTicketDetails(ticket);
+      
+      if (ticket.status === "In-Progress" && engineers.length > 0) {
+        const assignedEngineer = engineers.find(eng => eng.name === ticket.engineerName);
+        if (assignedEngineer) {
+          setEngineerId(assignedEngineer._id);
+        }
+      }
+
+      if (ticket.contactNumber) {
+        fetchOperatorDetails(ticket.contactNumber);
+      }
+    } else {
       const storedTicketId = localStorage.getItem("selectedTicketId");
       if (storedTicketId) {
         const fetchTicketDetails = async () => {
@@ -166,15 +166,23 @@ const TicketDetailsModal = ({ isOpen, onClose, ticket }) => {
             const response = await axios.get(
               `${import.meta.env.VITE_API_URL}/ticket-details/${storedTicketId}`
             );
-            setTicketDetails(response.data);
-            setTicketId(response.data.ticketId);
-            setResolution(response.data.resolution || "");
-            setPreventiveAction(response.data.preventiveAction || "");
-            setWarrantyCategory(response.data.warrantyCategory || "");
-            setTicketStatus(response.data.status || "");
+            const ticketData = response.data;
+            setTicketDetails(ticketData);
+            setTicketId(ticketData.ticketId || "");
+            setResolution(ticketData.resolution || "");
+            setPreventiveAction(ticketData.preventiveAction || "");
+            setWarrantyCategory(ticketData.warrantyCategory || "");
+            setTicketStatus(ticketData.status === "In-Progress" ? "In Progress" : ticketData.status || "");
 
-            if (response.data.contactNumber) {
-              fetchOperatorDetails(response.data.contactNumber);
+            if (ticketData.engineerName && engineers.length > 0) {
+              const assignedEngineer = engineers.find(eng => eng.name === ticketData.engineerName);
+              if (assignedEngineer) {
+                setEngineerId(assignedEngineer._id);
+              }
+            }
+
+            if (ticketData.contactNumber) {
+              fetchOperatorDetails(ticketData.contactNumber);
             }
           } catch (error) {
             console.error("Error fetching ticket details:", error.message);
@@ -184,7 +192,7 @@ const TicketDetailsModal = ({ isOpen, onClose, ticket }) => {
         fetchTicketDetails();
       }
     }
-  }, [ticket, isOpen]);
+  }, [ticket, isOpen, engineers]);
 
   
 
@@ -367,18 +375,28 @@ const TicketDetailsModal = ({ isOpen, onClose, ticket }) => {
         setShowSuccessPopup(true);
       } else if (ticketStatus === "In Progress") {
         // Handle in progress status
-        if (!selectedEngineer) {
-          alert("Engineer not found or selected incorrectly.");
-          return;
-        }
+        // Check if required fields are provided
+  if (!resolution || !preventiveAction || !warrantyCategory) {
+    alert("Resolution, Preventive Action, and Warranty Category are required for In-Progress tickets.");
+    return;
+  }
+  
+  if (!selectedEngineer) {
+    alert("Engineer not found or selected incorrectly.");
+    return;
+  }
+ 
 
 
         const inProgressResponse = await axios.put(
-          `${import.meta.env.VITE_API_URL}/tickets/in-progress/${idToUse}`,
-          {
-            engineerName: selectedEngineer.name,
-          }
-        );
+  `${import.meta.env.VITE_API_URL}/tickets/in-progress/${idToUse}`,
+  {
+    engineerName: selectedEngineer.name,
+    resolution: resolution,
+    preventiveAction: preventiveAction,
+    warrantyCategory: warrantyCategory
+  }
+);
 
         console.log("Ticket In Progress Response:", inProgressResponse.data);
         setTicketDetails(inProgressResponse.data.ticket);

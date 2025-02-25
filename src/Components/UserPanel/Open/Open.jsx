@@ -6,6 +6,10 @@ import { saveAs } from "file-saver";
 import { useNavigate } from "react-router-dom";
 import * as XLSX from "xlsx";
 import FilterPopup from "../Close/FilterPopup";
+import { MapContainer, TileLayer, Marker, Polyline, Popup } from 'react-leaflet';
+import 'leaflet-routing-machine';
+import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
+
 import L from "leaflet"; // Import Leaflet
 import "leaflet/dist/leaflet.css"; // Import Leaflet CSS
 
@@ -68,6 +72,9 @@ const Open = () => {
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [trackingDetails, setTrackingDetails] = useState(null);
   const [isTrackingModalOpen, setIsTrackingModalOpen] = useState(false);
+  const [route, setRoute] = useState(null);
+  const [distance, setDistance] = useState(null);
+  const [duration, setDuration] = useState(null);
   // const mapRef = useRef(null); // Ref for Leaflet map
   // const [mapInitialized, setMapInitialized] = useState(false); // Track if map is initialized
   const [bikerMarker, setBikerMarker] = useState(null);
@@ -193,24 +200,24 @@ const Open = () => {
   }, [mobileNumbers]);
 
   const fetchEtaData = async (mobileNumber) => {
-    try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/currentETA/${mobileNumber}`
-      );
-      if (response.data && Array.isArray(response.data.tickets)) {
-        const etaData = response.data.tickets.reduce((acc, ticket) => {
-          const { days, hours } = ticket.timeDifference;
-          acc[ticket.createdDate] = { days, hours };
-          return acc;
-        }, {});
-        setEtaData(etaData);
-      } else {
-        console.error("Tickets data is not an array or is undefined.");
-      }
-    } catch (error) {
-      console.error("Error fetching ETA data:", error);
+  try {
+    const response = await axios.get(
+      `${import.meta.env.VITE_API_URL}/currentETA/${mobileNumber}`
+    );
+    if (response.data && Array.isArray(response.data.tickets)) {
+      // Create an object with createdDate as keys and timeDifferenceInDays as values
+      const etaData = response.data.tickets.reduce((acc, ticket) => {
+        acc[ticket.createdDate] = { days: ticket.timeDifferenceInDays, hours: 0 };
+        return acc;
+      }, {});
+      setEtaData(etaData);
+    } else {
+      console.error("Tickets data is not an array or is undefined.");
     }
-  };
+  } catch (error) {
+    console.error("Error fetching ETA data:", error);
+  }
+};
 
   const fetchInitials = async (tickets) => {
     const initialsPromises = tickets.map(async (ticket) => {
@@ -363,16 +370,20 @@ const Open = () => {
       );
     }
 
-    if (filterCriteria.etaMin) {
-      filteredResults = filteredResults.filter(
-        (ticket) => ticket.eta >= parseInt(filterCriteria.etaMin)
-      );
-    }
-    if (filterCriteria.etaMax) {
-      filteredResults = filteredResults.filter(
-        (ticket) => ticket.eta <= parseInt(filterCriteria.etaMax)
-      );
-    }
+    if (filterCriteria.etaMin || filterCriteria.etaMax) {
+    filteredResults = filteredResults.filter((ticket) => {
+      const ticketEta = etaData[ticket.createdDate]?.days || 0;
+      
+      if (filterCriteria.etaMin && filterCriteria.etaMax) {
+        return ticketEta >= parseInt(filterCriteria.etaMin) && ticketEta <= parseInt(filterCriteria.etaMax);
+      } else if (filterCriteria.etaMin) {
+        return ticketEta >= parseInt(filterCriteria.etaMin);
+      } else if (filterCriteria.etaMax) {
+        return ticketEta <= parseInt(filterCriteria.etaMax);
+      }
+      return true;
+    });
+  }
 
     if (dateRange.from || dateRange.to) {
       filteredResults = filteredResults.filter((ticket) => {
@@ -564,75 +575,110 @@ const Open = () => {
       alert("Error downloading PDFs. Please try again.");
     }
   };
+// Replace the existing useEffect for map initialization with this version
+
+// Update the useEffect for map initialization
 useEffect(() => {
-    if (isTrackingModalOpen && trackingDetails && !mapRef.current) {
-      // Add CSS to hide attribution
-      const style = document.createElement('style');
-      style.textContent = '.leaflet-control-attribution.leaflet-control { display: none; }';
-      document.head.appendChild(style);
+  if (isTrackingModalOpen && trackingDetails) {
+    setTimeout(() => {
+      const mapContainer = document.getElementById('map');
+      
+      if (mapContainer && !mapRef.current) {
+        const style = document.createElement('style');
+        style.textContent = `
+          .leaflet-control-attribution.leaflet-control { display: none; }
+          .leaflet-routing-container.leaflet-bar.leaflet-routing-collapsible.leaflet-control { display: none; }
+        `;
+        document.head.appendChild(style);
 
-      const newMap = L.map("map", {
-        center: [
-          trackingDetails.companyCoordinates.lat,
-          trackingDetails.companyCoordinates.lon,
-        ],
-        zoom: 12,
-      });
+        const newMap = L.map('map', {
+          center: [
+            trackingDetails.companyCoordinates.lat,
+            trackingDetails.companyCoordinates.lon,
+          ],
+          zoom: 12,
+        });
 
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: ''
-      }).addTo(newMap);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: ''
+        }).addTo(newMap);
 
-      // Create point coordinates
-      const startPoint = [trackingDetails.companyCoordinates.lat, trackingDetails.companyCoordinates.lon];
-      const endPoint = [trackingDetails.engineerCoordinates.lat, trackingDetails.engineerCoordinates.lon];
+        // Create point coordinates
+        const startPoint = [trackingDetails.companyCoordinates.lat, trackingDetails.companyCoordinates.lon];
+        const endPoint = [trackingDetails.engineerCoordinates.lat, trackingDetails.engineerCoordinates.lon];
 
-      // Add markers with custom icons
-      L.marker(startPoint, { icon: homeIcon })
-        .addTo(newMap)
-        .bindPopup("Starting Point: Company Location");
+        // Add markers with custom icons and popups
+        L.marker(startPoint, { icon: homeIcon })
+          .addTo(newMap)
+          .bindPopup('Company Location');
 
-      L.marker(endPoint, { icon: officeIcon })
-        .addTo(newMap)
-        .bindPopup("Ending Point: Engineer Location");
+        L.marker(endPoint, { icon: officeIcon })
+          .addTo(newMap)
+          .bindPopup('Engineer Location');
 
-      // Create the polyline
-      const path = L.polyline([startPoint, endPoint], {
-        color: '#2196F3',
-        weight: 5,
-        opacity: 0.8
-      }).addTo(newMap);
+        // Add routing control
+        L.Routing.control({
+          waypoints: [
+            L.latLng(startPoint[0], startPoint[1]),
+            L.latLng(endPoint[0], endPoint[1])
+          ],
+          routeWhileDragging: false,
+          showAlternatives: false,
+          fitSelectedRoutes: true,
+          lineOptions: {
+            styles: [{ color: '#2196F3', weight: 5, opacity: 0.7 }]
+          },
+          createMarker: function() { return null; } // Disable default markers
+        }).addTo(newMap);
 
-      // Fit bounds with padding
-      const bounds = path.getBounds();
-      newMap.fitBounds(bounds, { padding: [50, 50] });
+        // Fit bounds with padding
+        const bounds = L.latLngBounds(startPoint, endPoint);
+        newMap.fitBounds(bounds, { padding: [50, 50] });
 
-      mapRef.current = newMap; // Store the map instance in the ref
-    }
-
-    return () => {
-      if (mapRef.current) {
-        mapRef.current.remove();
-        mapRef.current = null;
+        mapRef.current = newMap;
       }
-    };
-  }, [isTrackingModalOpen, trackingDetails]);
+    }, 100);
+  }
 
-  const handleTrackClick = async (ticketNo) => {
-    try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/operator-ticket-estimate`,
-        {
-          mobile: mobileNumbers,
-        }
-      );
-      setTrackingDetails(response.data);
-      setIsTrackingModalOpen(true);
-    } catch (error) {
-      console.error("Error fetching tracking details:", error);
-      alert("Failed to fetch tracking details. Please try again.");
+  return () => {
+    if (mapRef.current) {
+      mapRef.current.remove();
+      mapRef.current = null;
     }
   };
+}, [isTrackingModalOpen, trackingDetails]);
+
+  const handleTrackClick = async (ticketNo) => {
+  try {
+    const response = await axios.post(
+      `${import.meta.env.VITE_API_URL}/api/operator-ticket-estimate`,
+      {
+        mobile: mobileNumbers,
+        ticketId: ticketNo,
+      }
+    );
+
+    if (response.data) {
+      setTrackingDetails(response.data);
+      setIsTrackingModalOpen(true);
+
+      const start = `${response.data.companyCoordinates.lon},${response.data.companyCoordinates.lat}`;
+      const end = `${response.data.engineerCoordinates.lon},${response.data.engineerCoordinates.lat}`;
+      const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${start};${end}?overview=full&geometries=geojson`;
+
+      const osrmResponse = await axios.get(osrmUrl);
+      const routeData = osrmResponse.data.routes[0];
+      setRoute(routeData.geometry.coordinates);
+      setDistance((routeData.distance / 1000).toFixed(2)); // Distance in km
+      setDuration((routeData.duration / 60).toFixed(2)); // Duration in minutes
+    } else {
+      alert("No tracking details found for this ticket.");
+    }
+  } catch (error) {
+    console.error("Error fetching tracking details:", error);
+    alert("Failed to fetch tracking details. Please try again.");
+  }
+};
   // Add this utility functions
 L.GeometryUtil = L.extend(L.GeometryUtil || {}, {
   length: function(line) {
@@ -661,6 +707,36 @@ L.GeometryUtil = L.extend(L.GeometryUtil || {}, {
     };
   }
 });
+
+const [sortConfig, setSortConfig] = useState({
+  key: null,
+  direction: 'asc'
+});
+const handleSort = (key) => {
+  let direction = 'asc';
+  if (sortConfig.key === key && sortConfig.direction === 'asc') {
+    direction = 'desc';
+  }
+  setSortConfig({ key, direction });
+
+  const sortedTickets = [...displayedTickets].sort((a, b) => {
+    if (key === 'createdDate') {
+      return direction === 'asc' 
+        ? new Date(a.createdDate) - new Date(b.createdDate)
+        : new Date(b.createdDate) - new Date(a.createdDate);
+    }
+    if (key === 'eta') {
+      const etaA = etaData[a.createdDate]?.days || 0;
+      const etaB = etaData[b.createdDate]?.days || 0;
+      return direction === 'asc' ? etaA - etaB : etaB - etaA;
+    }
+    if (a[key] < b[key]) return direction === 'asc' ? -1 : 1;
+    if (a[key] > b[key]) return direction === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  setDisplayedTickets(sortedTickets);
+};
   return (
     <div className="flex flex-col mt-20 ml-32 h-full w-[88%] xl:pl-[10%] 2xl:pl-[10%] lg:pl-[15%]">
       <div className="flex justify-between items-center bg-white h-20">
@@ -910,84 +986,57 @@ L.GeometryUtil = L.extend(L.GeometryUtil || {}, {
               <>
                 <table className="min-w-full text-left text-sm font-light text-surface dark:text-white">
                   <thead className="border-b border-neutral-200 bg-white font-medium dark:border-white/10 dark:bg-body-dark">
-                    <tr>
-                      <th scope="col" className="px-2 py-2">
-                        <input
-                          type="checkbox"
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              const allTicketNos = new Set(
-                                currentTickets.map((ticket) => ticket.ticketNo)
-                              );
-                              setSelectedTickets(allTicketNos);
-                            } else {
-                              setSelectedTickets(new Set());
-                            }
-                          }}
-                        />
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-4 py-2 font-poppins text-[#343A40] text-[14px] font-medium leading-[22px] text-center"
-                      >
-                        Ticket No
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-4 py-2 font-poppins text-[#343A40] text-[14px] font-medium leading-[22px] text-center"
-                      >
-                        Created Date
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-4 py-2 font-poppins text-[#343A40] text-[14px] font-medium leading-[22px] text-center"
-                      >
-                        Time
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-4 py-2 font-poppins text-[#343A40] text-[14px] font-medium leading-[22px] text-center"
-                      >
-                        Category
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-4 py-2 font-poppins text-[#343A40] text-[14px] font-medium leading-[22px] text-center"
-                      >
-                        Issue Description
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-4 py-2 font-poppins text-[#343A40] text-[14px] font-medium leading-[22px] text-center"
-                      >
-                        ETA
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-4 py-2 font-poppins text-[#343A40] text-[14px] font-medium leading-[22px] text-center"
-                      >
-                        Preview
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-4 py-2 font-poppins text-[#343A40] text-[14px] font-medium leading-[22px] text-center"
-                      >
-                        Chat
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-4 py-2 font-poppins font-medium text-[#343A40] text-[14px]  leading-[22px] text-center"
-                      >
-                        Download
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-4 py-2 font-poppins text-[#343A40] text-[14px] font-medium leading-[22px] text-center"
-                      >
-                        Track
-                      </th>
-                    </tr>
-                  </thead>
+  <tr>
+    <th scope="col" className="px-2 py-2">
+      <input
+        type="checkbox"
+        onChange={(e) => {
+          if (e.target.checked) {
+            const allTicketNos = new Set(currentTickets.map((ticket) => ticket.ticketNo));
+            setSelectedTickets(allTicketNos);
+          } else {
+            setSelectedTickets(new Set());
+          }
+        }}
+      />
+    </th>
+    {[
+      { label: "Ticket No", key: "ticketNo" },
+      { label: "Created Date", key: "createdDate" },
+      { label: "Time", key: "time" },
+      { label: "Category", key: "issueCategory" },
+      { label: "Issue Description", key: "issueDescription" },
+      { label: "ETA", key: "eta" },
+      { label: "Preview", key: null },
+      { label: "Chat", key: null },
+      { label: "Download", key: null },
+      { label: "Track", key: null }
+    ].map((header) => (
+      <th
+        key={header.label}
+        className="px-4 py-2 font-poppins text-[#343A40] text-[14px] font-medium leading-[22px] text-center"
+      >
+        <div className="flex items-center justify-center gap-1">
+          {header.key ? (
+            <button
+              onClick={() => handleSort(header.key)}
+              className="flex items-center gap-1 hover:bg-gray-100 px-2 py-1 rounded transition-colors duration-200"
+            >
+              {header.label}
+              <span className="text-gray-500">
+                {sortConfig.key === header.key ? (
+                  sortConfig.direction === 'asc' ? '↑' : '↓'
+                ) : '↕'}
+              </span>
+            </button>
+          ) : (
+            header.label
+          )}
+        </div>
+      </th>
+    ))}
+  </tr>
+</thead>
                   <tbody>
                     {displayedTickets
                       .slice(
@@ -1141,17 +1190,17 @@ L.GeometryUtil = L.extend(L.GeometryUtil || {}, {
                             </td>
 
                             <td className="whitespace-nowrap px-2 py-2 font-medium text-neutral-900 text-center">
-                              <div className="flex justify-center">
-                                {ticket.status === "In-Progress" && (
-                                  <img
-                                    src="/track.png"
-                                    alt="Track"
-                                    className="h-7 w-7 cursor-pointer"
-                                    onClick={() => handleTrackClick(ticket.ticketNo)}
-                                  />
-                                )}
-                              </div>
-                            </td>
+  <div className="flex justify-center">
+    {ticket.status === "In-Progress" && ticket.acceptedByEngineer === "yes" && (
+      <img
+        src="/track.png"
+        alt="Track"
+        className="h-7 w-7 cursor-pointer"
+        onClick={() => handleTrackClick(ticket.ticketNo)}
+      />
+    )}
+  </div>
+</td>
                           </tr>
                         );
                       })}
@@ -1164,53 +1213,54 @@ L.GeometryUtil = L.extend(L.GeometryUtil || {}, {
                     ticketNumber={selectedTicketId}
                   />
                 )}
-                {isTrackingModalOpen && trackingDetails && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg w-[90%] md:w-[600px] p-6">
-            {/* Modal Header */}
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-poppins font-semibold">
-                Tracking Details
-              </h2>
-              <button
-                onClick={() => setIsTrackingModalOpen(false)}
-                className="text-gray-500 hover:text-gray-700 font-bold text-2xl"
-              >
-                ×
-              </button>
-            </div>
+  {isTrackingModalOpen && trackingDetails && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="bg-white rounded-lg shadow-lg w-[90%] md:w-[600px] p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-poppins font-semibold">
+          Tracking Details
+        </h2>
+        <button
+          onClick={() => {
+            setIsTrackingModalOpen(false);
+            if (mapRef.current) {
+              mapRef.current.remove();
+              mapRef.current = null;
+            }
+          }}
+          className="text-gray-500 hover:text-gray-700 font-bold text-2xl"
+        >
+          ×
+        </button>
+      </div>
 
-            {/* Map Section */}
-            <div className="relative h-64 mb-6 rounded-lg overflow-hidden">
-              <div id="map" className="w-full h-full bg-gray-200"></div>
-            </div>
+      <div id="map" className="h-64 mb-6 rounded-lg overflow-hidden"></div>
 
-            {/* Tracking Details Section */}
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <p className="font-poppins">
-                  <span className="font-semibold">Ticket Number:</span>{" "}
-                  {trackingDetails.ticketNumber}
-                </p>
-                <p className="font-poppins">
-                  <span className="font-semibold">Engineer Name:</span>{" "}
-                  {trackingDetails.engineerName}
-                </p>
-              </div>
-              <div className="flex justify-between items-center">
-                <p className="font-poppins">
-                  <span className="font-semibold">Distance:</span>{" "}
-                  {trackingDetails.distanceKm} km
-                </p>
-                <p className="font-poppins">
-                  <span className="font-semibold">Estimated Time:</span>{" "}
-                  {trackingDetails.estimatedTimeInHours} hours
-                </p>
-              </div>
-            </div>
-          </div>
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <p className="font-poppins">
+            <span className="font-semibold">Ticket Number:</span>{" "}
+            {trackingDetails.ticketNumber}
+          </p>
+          <p className="font-poppins">
+            <span className="font-semibold">Engineer Name:</span>{" "}
+            {trackingDetails.engineerName}
+          </p>
         </div>
-      )}
+        <div className="flex justify-between items-center">
+          <p className="font-poppins">
+            <span className="font-semibold">Distance:</span> {distance} km
+          </p>
+          <p className="font-poppins">
+            <span className="font-semibold">Estimated Time:</span>{" "}
+            {duration} minutes
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
                 <div className="flex justify-between items-center mt-4 ">
                   <div className="font-poppins font-light">
                     <span className="mr-2">Showing</span>

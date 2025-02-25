@@ -595,10 +595,10 @@ const EngineerDashboard = () => {
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     >
                       <option value="">Select Warranty Category</option>
-                      <option value="In Warranty">In Warranty</option>
-                      <option value="Out of Warranty">Out of Warranty</option>
-                      <option value="Extended Warranty">Extended Warranty</option>
-                      <option value="Not Applicable">Not Applicable</option>
+                      <option value="In Warranty">Comprehensive AMC</option>
+                      <option value="Out of Warranty">Non Comprehensive AMC</option>
+                      <option value="Extended Warranty">In-Warranty</option>
+                      <option value="Not Applicable">Out-of-Warranty</option>
                     </select>
                   </div>
 

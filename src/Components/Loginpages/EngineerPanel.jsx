@@ -13,6 +13,31 @@ const EngineerPanel = () => {
   const mobileInputRef = useRef(null);
   const otpInputRef = useRef(null);
 
+  // Restore state from sessionStorage on component mount
+  useEffect(() => {
+    const savedState = sessionStorage.getItem('engineerLoginState');
+    if (savedState) {
+      const parsedState = JSON.parse(savedState);
+      setMobileNumber(parsedState.mobileNumber || "");
+      setOtpFieldVisible(parsedState.otpFieldVisible || false);
+      setOtp(parsedState.otp || "");
+      setSuccessMessage(parsedState.successMessage || "");
+    }
+  }, []);
+
+  // Save state to sessionStorage when relevant state changes
+  useEffect(() => {
+    if (mobileNumber || otpFieldVisible || otp) {
+      sessionStorage.setItem('engineerLoginState', JSON.stringify({
+        mobileNumber,
+        otpFieldVisible,
+        otp,
+        successMessage
+      }));
+    }
+  }, [mobileNumber, otpFieldVisible, otp, successMessage]);
+
+  // Focus on appropriate input field
   useEffect(() => {
     if (otpFieldVisible && otpInputRef.current) {
       otpInputRef.current.focus();
@@ -41,9 +66,18 @@ const EngineerPanel = () => {
 
       if (response.data.otp) {
         setOtp(String(response.data.otp));
-        setSuccessMessage("OTP sent successfully to your WhatsApp.");
+        const successMsg = "OTP sent successfully to your WhatsApp.";
+        setSuccessMessage(successMsg);
         setErrorMessage("");
         setOtpFieldVisible(true);
+        
+        // Update sessionStorage immediately after state changes
+        sessionStorage.setItem('engineerLoginState', JSON.stringify({
+          mobileNumber,
+          otpFieldVisible: true,
+          otp: String(response.data.otp),
+          successMessage: successMsg
+        }));
       } else {
         setErrorMessage(response.data.message || "Failed to send OTP. Please try again.");
         setSuccessMessage("");
@@ -62,6 +96,10 @@ const EngineerPanel = () => {
       localStorage.setItem("loggedInEngineerMobileNumber", formattedMobileNumber);
       setSuccessMessage("Login successful!");
       setErrorMessage("");
+      
+      // Clear session storage on successful login
+      sessionStorage.removeItem('engineerLoginState');
+      
       navigate("/engineer-dashboard", { replace: true });
     } else {
       setErrorMessage("Invalid OTP. Please try again.");
@@ -86,15 +124,15 @@ const EngineerPanel = () => {
               <i className="fas fa-phone"></i>
             </span>
             <input
-  type="tel"
-  maxLength="10"
-  placeholder="Mobile Number"
-  value={mobileNumber}
-  onChange={handleMobileNumberChange}
-  className="w-full p-4 pl-10 text-black bg-[#F0EDFFCC] rounded-xl font-poppins text-lg"
-  autoFocus={!otpFieldVisible}
-  ref={mobileInputRef}
-/>
+              type="tel"
+              maxLength="10"
+              placeholder="Mobile Number"
+              value={mobileNumber}
+              onChange={handleMobileNumberChange}
+              className="w-full p-4 pl-10 text-black bg-[#F0EDFFCC] rounded-xl font-poppins text-lg"
+              autoFocus={!otpFieldVisible}
+              ref={mobileInputRef}
+            />
           </div>
         ) : (
           <div className="relative mb-3">
@@ -102,15 +140,15 @@ const EngineerPanel = () => {
               <i className="fas fa-lock"></i>
             </span>
             <input
-  type="tel"
-  maxLength="6"
-  placeholder="Enter OTP"
-  value={enteredOtp}
-  onChange={handleOtpChange}
-  className="w-full p-4 pl-10 text-black bg-[#F0EDFFCC] rounded-xl font-poppins text-lg"
-  autoFocus={otpFieldVisible}
-  ref={otpInputRef}
-/>
+              type="tel"
+              maxLength="6"
+              placeholder="Enter OTP"
+              value={enteredOtp}
+              onChange={handleOtpChange}
+              className="w-full p-4 pl-10 text-black bg-[#F0EDFFCC] rounded-xl font-poppins text-lg"
+              autoFocus={otpFieldVisible}
+              ref={otpInputRef}
+            />
           </div>
         )}
       </div>
